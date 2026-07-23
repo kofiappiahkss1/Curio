@@ -1,0 +1,9 @@
+# Curio — a diary that writes itself.
+User-agent: *
+Allow: /
+
+# The app itself holds nothing but the visitor's own local data,
+# so there is nothing here for a crawler to index beyond the landing page.
+Disallow: /app.html
+
+Sitemap: https://REPLACE-WITH-YOUR-DOMAIN/sitemap.xml

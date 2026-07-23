@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d1a2b">
+<title>Curio — a diary that writes itself</title>
+<meta name="description" content="A private museum of your ordinary days. Works entirely offline, on your phone. No account, no server, no ads.">
+<link rel="canonical" href="https://REPLACE-WITH-YOUR-DOMAIN/">
+<meta name="keywords" content="private journal app, offline diary, no account journal, encrypted diary, photo journal, mood tracker, journaling app, local-first, PWA diary, multilingual journal">
+<meta name="author" content="Curio">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:title" content="Curio — a diary that writes itself">
+<meta property="og:description" content="A private museum of your ordinary days. Entirely offline. Entirely yours.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://REPLACE-WITH-YOUR-DOMAIN/">
+<meta property="og:image" content="https://REPLACE-WITH-YOUR-DOMAIN/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Curio — a museum placard reading: After dark, ramen, and it did the job.">
+<meta property="og:site_name" content="Curio">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Curio — a diary that writes itself">
+<meta name="twitter:description" content="Keep the small things. Curio writes them into museum placards, finds the patterns, and never leaves your phone.">
+<meta name="twitter:image" content="https://REPLACE-WITH-YOUR-DOMAIN/og-image.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+:root{
+  --dusk:#1d1a2b; --dusk-2:#252135; --dusk-3:#2f2a42;
+  --ivory:#f2ebdb; --ink:#2a2118; --ink-soft:#6d6350;
+  --brass:#c9a24b; --brass-deep:#a8842f;
+  --rose:#b8817e; --sage:#8fa08a; --slate:#7d89a8; --seal:#3a5a45;
+  --line:rgba(242,235,219,.14);
+  --serif: ui-serif, Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--dusk); color:var(--ivory);
+  font-family:var(--serif); -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(29,26,43,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ivory)}
+.brand img{width:30px;height:30px;border-radius:8px}
+.brand span{font-size:21px;font-weight:500;letter-spacing:.01em}
+.nav-cta{background:var(--brass);color:#231d10;text-decoration:none;padding:9px 18px;border-radius:22px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700}
+
+/* ---------- hero ---------- */
+header{position:relative;padding:82px 0 70px;overflow:hidden}
+header::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(90% 60% at 50% -5%, #322b4d 0%, transparent 62%),
+             radial-gradient(50% 40% at 82% 30%, rgba(184,129,126,.16), transparent 70%),
+             radial-gradient(45% 38% at 12% 55%, rgba(201,162,75,.12), transparent 70%)}
+header .wrap{position:relative}
+.kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--brass);margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.kicker::after{content:"";flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,var(--brass),transparent)}
+h1{font-size:clamp(40px,7.4vw,72px);line-height:1.02;font-weight:400;letter-spacing:-.015em;margin-bottom:22px}
+h1 em{font-style:italic;color:var(--brass)}
+.lede{font-size:clamp(17px,2.3vw,21px);line-height:1.55;color:rgba(242,235,219,.72);max-width:600px;margin-bottom:34px}
+.cta-row{display:flex;gap:13px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-block;text-decoration:none;padding:15px 28px;border-radius:30px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  transition:transform .18s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--brass);color:#231d10;box-shadow:0 12px 30px -10px rgba(201,162,75,.5)}
+.btn.ghost{border:1px solid var(--line);color:var(--ivory);font-weight:400}
+.trust{display:flex;gap:20px;flex-wrap:wrap;margin-top:26px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:rgba(242,235,219,.45)}
+.trust span{display:flex;align-items:center;gap:7px}
+.trust i{width:5px;height:5px;border-radius:50%;background:var(--seal);box-shadow:0 0 0 3px rgba(58,90,69,.25);font-style:normal}
+
+/* ---------- placard showcase ---------- */
+.showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:58px}
+.placard-card{background:var(--ivory);color:var(--ink);border-radius:14px;padding:17px 18px;
+  box-shadow:0 18px 40px -22px rgba(0,0,0,.8);transform:rotate(var(--r,0deg))}
+.placard-card:nth-child(1){--r:-.7deg} .placard-card:nth-child(3){--r:.8deg}
+.placard-card .meta{display:flex;justify-content:space-between;margin-bottom:9px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+.placard-card .meta b{color:var(--brass-deep)}
+.placard-card h3{font-size:18.5px;font-weight:500;line-height:1.2;margin-bottom:5px}
+.placard-card p{font-size:14px;line-height:1.5;color:#4a4234}
+.placard-card .tag{display:inline-block;margin-top:11px;font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.09em;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#fff}
+.t-meal{background:#a8724e} .t-place{background:var(--sage)} .t-read{background:var(--slate)}
+
+/* ---------- sections ---------- */
+section{padding:76px 0;border-top:1px solid var(--line)}
+.sec-label{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:rgba(242,235,219,.42);margin-bottom:16px}
+h2{font-size:clamp(28px,4.2vw,40px);line-height:1.12;font-weight:400;letter-spacing:-.01em;margin-bottom:16px;max-width:620px}
+h2 em{font-style:italic;color:var(--brass)}
+.sec-lede{font-size:17px;line-height:1.6;color:rgba(242,235,219,.66);max-width:580px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:18px;margin-top:42px}
+.feature{background:var(--dusk-2);border:1px solid var(--line);border-radius:16px;padding:24px 22px}
+.feature .ic{width:42px;height:42px;border-radius:12px;background:var(--dusk-3);display:grid;place-items:center;margin-bottom:16px}
+.feature .ic svg{width:20px;height:20px;stroke:var(--brass);fill:none;stroke-width:1.6}
+.feature h3{font-size:19px;font-weight:500;margin-bottom:8px}
+.feature p{font-size:14.5px;line-height:1.55;color:rgba(242,235,219,.6)}
+
+/* ---------- languages ---------- */
+.langs{display:flex;flex-wrap:wrap;gap:9px;margin-top:34px}
+.lang{border:1px solid var(--line);border-radius:22px;padding:9px 15px;font-size:14px;color:rgba(242,235,219,.8);
+  background:var(--dusk-2)}
+.lang b{color:var(--brass);font-weight:400;font-style:italic}
+.lang-demo{margin-top:34px;background:var(--dusk-2);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.lang-demo .row{display:flex;gap:16px;padding:15px 20px;border-bottom:1px solid var(--line);align-items:baseline}
+.lang-demo .row:last-child{border-bottom:none}
+.lang-demo .code{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--brass);flex-shrink:0;width:74px;padding-top:3px}
+.lang-demo .line{font-size:15px;line-height:1.5;color:rgba(242,235,219,.82)}
+.lang-demo .row.rtl .line{direction:rtl;text-align:right;flex:1}
+
+/* ---------- install ---------- */
+.install{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin-top:40px}
+.step{background:var(--dusk-2);border:1px solid var(--line);border-radius:16px;padding:24px 22px}
+.step .n{font-size:32px;color:var(--brass);line-height:1;margin-bottom:14px;display:block}
+.step h3{font-size:18px;font-weight:500;margin-bottom:8px}
+.step p{font-size:14.5px;line-height:1.55;color:rgba(242,235,219,.62)}
+.step code{font-family:var(--mono);font-size:12.5px;background:var(--dusk-3);padding:2px 6px;border-radius:5px;color:var(--brass)}
+
+/* ---------- honest ---------- */
+.honest{background:rgba(201,162,75,.06);border:1px solid rgba(201,162,75,.22);border-radius:18px;padding:28px 26px;margin-top:38px}
+.honest h3{font-size:20px;font-weight:500;margin-bottom:12px;color:var(--brass)}
+.honest p{font-size:15px;line-height:1.62;color:rgba(242,235,219,.72);margin-bottom:11px}
+.honest p:last-child{margin-bottom:0}
+
+/* ---------- final ---------- */
+.final{text-align:center;padding:86px 0}
+.final h2{margin:0 auto 18px}
+.final .sec-lede{margin:0 auto 30px}
+footer{border-top:1px solid var(--line);padding:34px 0 48px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(242,235,219,.35);text-align:center}
+
+@media (max-width:640px){
+  header{padding:52px 0 44px}
+  section{padding:56px 0}
+  .showcase{margin-top:42px}
+  .placard-card{transform:none}
+}
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Curio",
+      "alternateName": "Curio — a diary that writes itself",
+      "applicationCategory": "LifestyleApplication",
+      "applicationSubCategory": "Journal",
+      "operatingSystem": "iOS, Android, Windows, macOS, Linux — any modern browser",
+      "url": "https://REPLACE-WITH-YOUR-DOMAIN/",
+      "image": "https://REPLACE-WITH-YOUR-DOMAIN/og-image.png",
+      "description": "A private museum of your ordinary days. Curio turns photos, places, meals, people and things you read into museum placards, finds patterns you would never notice, and works entirely offline with no account and no server.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Writes your diary entries for you",
+        "Works fully offline",
+        "No account and no server",
+        "Encrypted Recovery Kit restores your archive on any device",
+        "One-tap mood tracking with correlations",
+        "On this day resurfacing",
+        "14 languages and dialects",
+        "Sealed subjects that are never captured"
+      ],
+      "inLanguage": ["en-GB","en-US","es-ES","es-419","pt-BR","fr-FR","de-DE","ar","sw","zu","hi","zh-Hans","ja"],
+      "isAccessibleForFree": true,
+      "browserRequirements": "Requires JavaScript and a browser supporting service workers."
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does Curio work without internet?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. After the first visit the whole app is cached on your device. It opens and works in aeroplane mode, and every entry is stored locally." }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an account?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Curio has no accounts and no server. Your device is your account, and there is nothing to sign up for." }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if I lose my phone?",
+          "acceptedAnswer": { "@type": "Answer", "text": "A Recovery Kit is your whole archive sealed with a passphrase only you know, kept wherever you choose. On a new phone or laptop, choose Restore, enter the passphrase, and your diary is back." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Curio read my screen?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Silent background screen capture is impossible on phones for any app. Curio only keeps what you deliberately share, paste or capture." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Curio free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. There is no subscription, no advertising and no data collection. There is no server to pay for." }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="./"><img src="icons/icon-192.png" alt=""><span>Curio</span></a>
+    <a class="nav-cta" href="app.html">Open the app</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">A private museum of ordinary days</div>
+    <h1>A diary that <em>writes itself</em> — and answers only to you.</h1>
+    <p class="lede">Keep the small things: a photo, where you were, what you ate, who you were with, something you read. Curio turns them into museum placards, and finds the patterns you'd never notice yourself.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="app.html">Start keeping moments</a>
+      <a class="btn ghost" href="#install">How to install it</a>
+    </div>
+    <div class="trust">
+      <span><i></i>Works with no internet</span>
+      <span><i></i>No account, ever</span>
+      <span><i></i>Nothing leaves your phone</span>
+      <span><i></i>14 languages</span>
+      <span><i></i>Survives a lost phone</span>
+      <span><i></i>Free forever</span>
+    </div>
+
+    <div class="showcase">
+      <div class="placard-card">
+        <div class="meta"><span>2026.204</span><b>07:12</b></div>
+        <h3>A note to yourself</h3>
+        <p>First thing, you left yourself this: “first light, black coffee”.</p>
+        <span class="tag t-read">Note</span>
+      </div>
+      <div class="placard-card">
+        <div class="meta"><span>2026.206</span><b>13:15</b></div>
+        <h3>Time at the harbour</h3>
+        <p>At the turn of the day, the harbour held you longer than you planned.</p>
+        <span class="tag t-place">Place</span>
+      </div>
+      <div class="placard-card">
+        <div class="meta"><span>2026.207</span><b>19:30</b></div>
+        <h3>ramen</h3>
+        <p>After dark, ramen, and it did the job. You have had this 3 times. You are loyal to it.</p>
+        <span class="tag t-meal">Meal</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-label">What it does</div>
+    <h2>Photos catch the highlights. <em>Everything else evaporates.</em></h2>
+    <p class="sec-lede">The meal you keep reordering, the walk you didn't think to remember, the article that changed your mind — gone by the weekend. Curio keeps the texture, not just the peaks.</p>
+
+    <div class="grid">
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg></div>
+        <h3>Snap it in the app</h3>
+        <p>A real camera inside Curio — takes the picture, shrinks it, and files it with a placard. Or pick one you already have.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+        <h3>Places, meals, people</h3>
+        <p>Name a place the way you'd say it to a friend. Curio remembers how often you return, and tells you.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M6 4v10a4 4 0 0 0 8 0V6"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="6" r="1.6"/></svg></div>
+        <h3>Threads you didn't see</h3>
+        <p>“Your day has a hinge — more of your moments happen around 19:00 than any other hour. You never decided that.”</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Four sealed subjects</h3>
+        <p>Banking, health, messages, passwords. If something you type looks like one, it is refused before it is written — and shown as withheld.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.8-7 9-4-1.2-7-4.6-7-9V6z"/></svg></div>
+        <h3>No server to breach</h3>
+        <p>There is no account and no backend. Curio contains no code that could upload anything — a stronger promise than a privacy policy.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v13M7 11l5 5 5-5M4 21h16"/></svg></div>
+        <h3>Yours to take</h3>
+        <p>Export as one plain file, or as readable text you could print. Nothing is locked in, ever.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v4M15 12v3"/></svg></div>
+        <h3>Survives a lost phone</h3>
+        <p>A Recovery Kit is your whole archive sealed with a passphrase only you know. Keep it in your own cloud. New phone or laptop, enter the passphrase, everything is back.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></div>
+        <h3>Mood, in one tap</h3>
+        <p>Curio learns which places and people travel with your better days, and tells you plainly.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <h3>On this day</h3>
+        <p>A year later, the day comes back to you unasked — the strongest reason anyone keeps a diary at all.</p>
+      </div>
+      <div class="feature">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v13M8 7l4-4 4 4"/><path d="M5 14v6h14v-6"/></svg></div>
+        <h3>Beautiful to share</h3>
+        <p>Any placard becomes a card worth showing — rendered on your phone, never uploaded. Share the moment, not your archive.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-label">Languages &amp; dialects</div>
+    <h2>Your diary should sound like <em>you</em>.</h2>
+    <p class="sec-lede">Curio doesn't just translate the buttons — the placards themselves are written natively in each language, including dialects with their own voice.</p>
+
+    <div class="langs">
+      <span class="lang">English <b>UK</b></span>
+      <span class="lang">English <b>US</b></span>
+      <span class="lang">Naija <b>Pidgin</b></span>
+      <span class="lang">Español <b>España</b></span>
+      <span class="lang">Español <b>Latinoamérica</b></span>
+      <span class="lang">Português <b>Brasil</b></span>
+      <span class="lang">Français</span>
+      <span class="lang">Deutsch</span>
+      <span class="lang">العربية</span>
+      <span class="lang">Kiswahili</span>
+      <span class="lang">isiZulu</span>
+      <span class="lang">हिन्दी</span>
+      <span class="lang">简体中文</span>
+      <span class="lang">日本語</span>
+    </div>
+
+    <div class="lang-demo">
+      <div class="row"><span class="code">EN</span><span class="line">After dark, ramen, and it did the job. You have had this 3 times. You are loyal to it.</span></div>
+      <div class="row"><span class="code">Pidgin</span><span class="line">Before afternoon, ramen, e do the work. You don chop dis one 3 times. You dey loyal.</span></div>
+      <div class="row"><span class="code">Kiswahili</span><span class="line">Katikati ya asubuhi, ramen, na ilitosha. Umekula hiki mara 3. Wewe ni mwaminifu.</span></div>
+      <div class="row rtl"><span class="code">العربية</span><span class="line">في منتصف الصباح، ramen، وأدّى الغرض. أكلت هذا 3 مرات. أنت وفيّ له.</span></div>
+      <div class="row"><span class="code">日本語</span><span class="line">昼前に、ramen、それで十分だった。これを3回。あなたは律儀です。</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-label">If the worst happens</div>
+    <h2>Lose the phone. <em>Keep the diary.</em></h2>
+    <p class="sec-lede">Curio has no server — which is the whole point, and also the obvious risk. So it gives you something better than a server: a key that only you hold.</p>
+
+    <div class="install">
+      <div class="step">
+        <span class="n">1</span>
+        <h3>Choose a passphrase</h3>
+        <p>Four or five unrelated words. Curio shows a short fingerprint so you can check later that you wrote down the right one. We never see it and cannot reset it.</p>
+      </div>
+      <div class="step">
+        <span class="n">2</span>
+        <h3>Keep a Recovery Kit</h3>
+        <p>One encrypted file holding everything — placards, photos, moods, language. Put it in Drive, iCloud, or email it to yourself. It's unreadable without your passphrase.</p>
+      </div>
+      <div class="step">
+        <span class="n">3</span>
+        <h3>Open Curio anywhere</h3>
+        <p>New phone, borrowed laptop, any browser. Choose <code>Restore</code>, pick the kit, type the passphrase. Your whole diary is back — and merges rather than overwrites.</p>
+      </div>
+    </div>
+
+    <div class="honest" style="border-color:rgba(143,160,138,.3);background:rgba(58,90,69,.08)">
+      <h3 style="color:#9fc2ac">It can back itself up, too</h3>
+      <p>On Android and desktop, point Curio at a folder your cloud already syncs. It quietly rewrites the encrypted kit as you go — nothing to remember, nothing to press. On iPhone, Curio reminds you before the gap gets dangerous.</p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="sec-label">Installing</div>
+    <h2>It installs from the web. <em>No app store.</em></h2>
+    <p class="sec-lede">Open it once with internet, add it to your home screen, and it works from then on — aeroplane mode included.</p>
+
+    <div class="install">
+      <div class="step">
+        <span class="n">1</span>
+        <h3>Open the app</h3>
+        <p>Tap <a href="app.html" style="color:var(--brass)">Start keeping moments</a> on your phone. Pick your language and grant the permissions you want.</p>
+      </div>
+      <div class="step">
+        <span class="n">2</span>
+        <h3>On iPhone</h3>
+        <p>In Safari, tap the <b>Share</b> button, then <code>Add to Home Screen</code>.</p>
+      </div>
+      <div class="step">
+        <span class="n">3</span>
+        <h3>On Android</h3>
+        <p>In Chrome, open the menu and tap <code>Install app</code> or <code>Add to home screen</code>.</p>
+      </div>
+    </div>
+
+    <div class="honest">
+      <h3>What Curio will not pretend to do</h3>
+      <p><b>It cannot silently watch your screen.</b> No app can, on any phone — iOS forbids it outright, and Android demands a visible notification plus fresh consent every session. Instead, share or paste anything into Curio and it becomes a memory.</p>
+      <p><b>Capture is a deliberate tap, not surveillance.</b> Given what this app holds, that constraint is arguably the right one.</p>
+      <p><b>Your archive lives and dies with the phone.</b> That is the price of having no server. There is an Export button — use it now and then.</p>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2>Keep today, before it <em>evaporates</em>.</h2>
+    <p class="sec-lede">One photo. One place. One meal. It starts from there.</p>
+    <a class="btn primary" href="app.html">Open Curio</a>
+  </div>
+</section>
+
+<footer>
+  Curio · Everything stays on your phone · No account · No ads · No server<br>
+  <span style="opacity:.7">Free and installable from this page — no app store required.</span>
+</footer>
+
+</body>
+</html>
