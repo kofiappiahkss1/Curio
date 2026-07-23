@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1a2b">
+<title>Privacy — Curio</title>
+<meta name="description" content="Curio collects nothing. There is no server, no account and no analytics. Here is exactly what that means, and the two places where anything leaves your device.">
+<link rel="stylesheet" href="pages.css">
+<link rel="icon" href="icons/icon-192.png">
+</head>
+<body>
+<nav><div class="wrap">
+    <a class="brand" href="./"><img src="icons/icon-192.png" alt=""><span>Curio</span></a>
+    <div class="nav-links">
+      <a href="about.html" class="hide-sm">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html" class="hide-sm">Terms</a>
+      <a href="app.html">Open</a>
+    </div>
+  </div></nav>
+<div class="wrap">
+<header class="page">
+  <div class="kicker">Privacy</div>
+  <h1>We collect <em>nothing</em>.</h1>
+  <p class="lede">Most privacy policies explain what a company does with your data. This one explains why there is no company holding any.</p>
+  <div class="updated">Last updated 23 July 2026 · Applies to Curio on the web, iOS and Android</div>
+</header>
+
+<main>
+<section>
+  <h2>The short version</h2>
+  <p>Curio is a diary that runs entirely on your own device. It has <strong>no user accounts, no server, no database in the cloud, no analytics and no advertising</strong>. Your entries, photos, recordings and settings are written to your device's own storage and stay there.</p>
+  <div class="callout good">
+    <span class="k">The honest test</span>
+    <p>Curio contains no code capable of uploading your diary. You do not have to take that on trust — the source is on the page you are reading this from, and you can watch the network traffic yourself in any browser's developer tools.</p>
+  </div>
+</section>
+
+<section>
+  <h2>What is stored, and where</h2>
+  <table>
+    <tr><th>What</th><th>Where it lives</th><th>Who can see it</th></tr>
+    <tr><td><strong>Diary entries</strong><br>titles, prose, moods, dates</td><td>Your device (IndexedDB)</td><td>You</td></tr>
+    <tr><td><strong>Photos and recordings</strong></td><td>Your device</td><td>You</td></tr>
+    <tr><td><strong>Your name and date of birth</strong><br>optional</td><td>Your device</td><td>You</td></tr>
+    <tr><td><strong>Your country</strong></td><td>Your device</td><td>You</td></tr>
+    <tr><td><strong>Recovery Kits</strong></td><td>Wherever <em>you</em> put the file</td><td>Anyone with the file <em>and</em> your passphrase</td></tr>
+  </table>
+  <p>Your country is worked out from your device's own time-zone setting. Curio does not ask for location permission to do this and makes no network request. You can change or clear it at any time.</p>
+</section>
+
+<section>
+  <h2>The two places anything leaves your device</h2>
+  <p>Being honest about the exceptions matters more than the general claim, so here they are in full. Both are optional, both are off unless you turn them on, and neither carries anything about you.</p>
+
+  <div class="callout warn">
+    <span class="k">1 · Live dictation</span>
+    <p>If you switch on live transcription, your browser's own speech service converts speech to text. On most browsers — Chrome especially — <strong>this sends audio to the browser maker's servers</strong>, not to us. Curio tells you this before you enable it and it is off by default. Audio <em>recording</em> is always local; only dictation involves anyone else.</p>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">2 · Today in History enrichment</span>
+    <p>If you switch this on, Curio asks Wikipedia's public feed for events on a given date. <strong>The request contains a month and a day and nothing else</strong> — no identifier, no diary content, nothing about you. It is off by default and the bundled almanac works without it.</p>
+  </div>
+
+  <p>That is the complete list. Everything else — the writing, the patterns, the search, the holidays, the meeting write-ups, the annual book — happens on your device with the radio off.</p>
+</section>
+
+<section>
+  <h2>Cookies and tracking</h2>
+  <p>Curio sets <strong>no cookies</strong>. It uses no analytics, no advertising networks, no tracking pixels, no fingerprinting and no third-party scripts of any kind. There is no consent banner because there is nothing to consent to.</p>
+</section>
+
+<section>
+  <h2>Your rights, and how to exercise them</h2>
+  <p>Data protection law gives you rights over personal data an organisation holds about you. Curio holds none — but the equivalent controls are built into the app and take one tap each.</p>
+  <table>
+    <tr><th>Right</th><th>How</th></tr>
+    <tr><td><strong>Access</strong> — see everything held</td><td>Vault → Export archive</td></tr>
+    <tr><td><strong>Portability</strong> — take it elsewhere</td><td>Vault → Export as readable text, or the annual book</td></tr>
+    <tr><td><strong>Erasure</strong> — delete everything</td><td>Vault → Erase everything</td></tr>
+    <tr><td><strong>Rectification</strong> — correct it</td><td>Edit or forget any moment</td></tr>
+    <tr><td><strong>Objection / restriction</strong></td><td>Switch off any capture source in the Vault</td></tr>
+  </table>
+  <p>Because nothing is transmitted to us, there is no request to make and no waiting period. Uninstalling the app removes the data with it, so <strong>export a Recovery Kit before you do</strong>.</p>
+</section>
+
+<section>
+  <h2>Regulatory position</h2>
+  <h3>GDPR and UK GDPR</h3>
+  <p>Curio processes personal data <strong>solely on your own device and under your sole control</strong>. No personal data is transmitted to, stored by, or accessible to the developer. There are no international transfers because there are no transfers. Where a purely personal or household activity is concerned, Article 2(2)(c) applies.</p>
+  <h3>CCPA / CPRA</h3>
+  <p>No personal information is collected, sold or shared. There is nothing to opt out of.</p>
+  <h3>Children</h3>
+  <p>Curio is not directed at children under 13 and collects no information from anyone, of any age. No account can be created because there are no accounts.</p>
+  <h3>Security</h3>
+  <p>Recovery Kits are encrypted with AES-256-GCM using a key derived from your passphrase by PBKDF2-SHA256 at 310,000 iterations. Your passphrase never leaves your device and cannot be recovered by anyone, including us. An optional PIN locks the app on opening.</p>
+  <div class="callout">
+    <p>Because your archive lives on one device, its greatest risk is not theft but loss. Keep a Recovery Kit somewhere you trust.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Changes, and getting in touch</h2>
+  <p>If this policy ever changes, the date at the top changes with it, and the previous versions remain in the project's public history.</p>
+  <p>Questions about privacy: <a href="mailto:kofiappiahkss@gmail.com">kofiappiahkss@gmail.com</a></p>
+  <div class="callout">
+    <span class="k">Not legal advice</span>
+    <p>This policy was drafted to describe Curio accurately and plainly. It is not legal advice, and if you are publishing Curio commercially or in a regulated market you should have a qualified lawyer review it against your jurisdiction.</p>
+  </div>
+</section>
+</main>
+</div>
+<footer><div class="wrap">
+    <div class="links">
+      <a href="./">Home</a><a href="about.html">About</a><a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a><a href="app.html">Open Curio</a>
+    </div>
+    <div class="fine">No account · No server · No advertising · Nothing collected</div>
+  </div></footer>
+</body>
+</html>

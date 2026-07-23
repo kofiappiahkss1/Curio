@@ -7,6 +7,7 @@ a folder). If even one is missing the app will fail in a way that looks like
 nothing changed.
 
 ```
+about.html
 app.html
 app.js
 backup.js
@@ -28,6 +29,8 @@ locks.js
 manifest.webmanifest
 meeting.js
 og-image.png
+pages.css
+privacy.html
 profile.js
 robots.txt
 search.js
@@ -36,12 +39,12 @@ sitemap.xml
 storage.js
 store.js
 sw.js
+terms.html
 themes.js
 voice.js
 ```
 
-That is **32 files** — 19 JavaScript modules, 7 icons, and the rest.
-
+That is **35 files** — 19 JavaScript modules, 7 icons, four pages, and the rest.
 ## Why your changes were not appearing
 
 The old service worker served the app **cache-first**, including its own code.
@@ -84,3 +87,33 @@ updates*, or clear site data as above.
 1. Upload the changed files to the repository.
 2. Wait a minute for the host to pick them up.
 3. Open the app. Within a few seconds it offers you the new version.
+
+## Your details, now filled in
+
+| Setting | Value |
+|---|---|
+| Contact address | `kofiappiahkss@gmail.com` |
+| Repository | `https://github.com/kofiappiahkss1/Curio` |
+| Published site | `https://kofiappiahkss1.github.io/Curio/` |
+| Privacy policy URL (for the app stores) | `https://kofiappiahkss1.github.io/Curio/privacy.html` |
+
+Only one placeholder remains, and it should: the Android signing fingerprint in
+`store/assetlinks.template.json`, which does not exist until you build.
+
+### A word on the capital C
+
+GitHub Pages paths are **case-sensitive**. `/Curio/` and `/curio/` are different
+addresses, and only the one matching your repository name will work. Everything
+here is set to **`Curio`**. If your repository is actually named `curio`, change
+it in `index.html`, `robots.txt`, `sitemap.xml` and `store/twa-manifest.json` —
+or rename the repository, which is quicker.
+
+## What the app stores will ask for
+
+| Asked for | Where it is |
+|---|---|
+| Privacy policy URL | `https://your-site/privacy.html` |
+| Support URL or email | `about.html`, and the address you filled in |
+| Data deletion route | Vault → Erase everything (describe it in the listing) |
+| Data collection declaration | Every answer is "none" — see `store/LISTING.md` |
+| Age rating | 4+ / Everyone. No accounts, no user content from others |

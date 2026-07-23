@@ -134,6 +134,13 @@ const EN_GB = {
     exportMarkdown: 'Export as readable text',
     dangerZone: 'Careful',
 
+    // ---- the public pages ----
+    legal: 'About and legal',
+    linkAbout: 'About Curio', linkPrivacy: 'Privacy', linkTerms: 'Terms of use',
+    linkAboutSub: 'Why it exists, and how to get in touch',
+    linkPrivacySub: 'What is stored, and the two places anything leaves',
+    linkTermsSub: 'What you are responsible for',
+
     // ---- updates ----
     updateReady: 'A new version is ready',
     updateBody: 'Tap to load it. Nothing in your diary is affected.',

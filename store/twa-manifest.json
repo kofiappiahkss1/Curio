@@ -1,7 +1,7 @@
 {
   "packageId": "app.curio.diary",
-  "host": "REPLACE-WITH-YOUR-DOMAIN",
-  "name": "Curio — a diary that writes itself",
+  "host": "kofiappiahkss1.github.io",
+  "name": "Curio \u2014 a diary that writes itself",
   "launcherName": "Curio",
   "display": "standalone",
   "themeColor": "#1d1a2b",
@@ -11,11 +11,14 @@
   "navigationDividerColor": "#1d1a2b",
   "backgroundColor": "#1d1a2b",
   "enableNotifications": true,
-  "startUrl": "/app.html",
-  "iconUrl": "https://REPLACE-WITH-YOUR-DOMAIN/icons/icon-512.png",
-  "maskableIconUrl": "https://REPLACE-WITH-YOUR-DOMAIN/icons/icon-maskable-512.png",
+  "startUrl": "/Curio/app.html",
+  "iconUrl": "https://kofiappiahkss1.github.io/Curio/icons/icon-512.png",
+  "maskableIconUrl": "https://kofiappiahkss1.github.io/Curio/icons/icon-maskable-512.png",
   "splashScreenFadeOutDuration": 300,
-  "signingKey": { "path": "./android.keystore", "alias": "curio" },
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "curio"
+  },
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
   "shortcuts": [
@@ -23,18 +26,20 @@
       "name": "Keep a moment",
       "short_name": "Keep",
       "url": "/app.html",
-      "chosenIconUrl": "https://REPLACE-WITH-YOUR-DOMAIN/icons/icon-192.png"
+      "chosenIconUrl": "https://kofiappiahkss1.github.io/Curio/icons/icon-192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://REPLACE-WITH-YOUR-DOMAIN/manifest.webmanifest",
+  "webManifestUrl": "https://kofiappiahkss1.github.io/Curio/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
-  "alphaDependencies": { "enabled": false },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://REPLACE-WITH-YOUR-DOMAIN/",
+  "fullScopeUrl": "https://kofiappiahkss1.github.io/Curio/",
   "minSdkVersion": 23,
   "orientation": "portrait"
 }

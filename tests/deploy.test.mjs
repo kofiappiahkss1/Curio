@@ -99,3 +99,140 @@ test('the service worker and the app agree on the version', () => {
   assert.ok(build.endsWith(swVersion.replace(/^v/, '')),
     `build ${build} should end with service worker version ${swVersion}`);
 });
+
+/* ================= THE PUBLIC PAGES ================= */
+test('the legal and information pages exist and are cached', () => {
+  for (const page of ['about.html', 'privacy.html', 'terms.html', 'pages.css']) {
+    assert.ok(existsSync(join(root, page)), `${page} is missing`);
+    assert.ok(CODE.includes('./' + page), `${page} is not in the service worker cache list`);
+  }
+});
+
+test('every page is reachable from every other page', () => {
+  const pages = ['index.html', 'about.html', 'privacy.html', 'terms.html'];
+  for (const p of pages) {
+    const html = read(p);
+    for (const target of ['about.html', 'privacy.html', 'terms.html']) {
+      if (p === target) continue;
+      assert.ok(html.includes(target), `${p} does not link to ${target}`);
+    }
+    assert.ok(html.includes('app.html'), `${p} does not link to the app`);
+  }
+});
+
+test('the app itself links out to the legal pages', () => {
+  const app = read('app.js');
+  for (const target of ['about.html', 'privacy.html', 'terms.html']) {
+    assert.ok(app.includes(target), `the Vault does not link to ${target}`);
+  }
+  assert.match(app, /rel="noopener"/, 'external links must not leak the opener');
+});
+
+test('the privacy policy discloses the two network exceptions', () => {
+  const html = read('privacy.html');
+  assert.match(html, /dictation/i, 'live dictation must be disclosed');
+  assert.match(html, /Wikipedia/i, 'the history enrichment must be disclosed');
+  assert.match(html, /no cookies|sets <strong>no cookies|no cookies<\/strong>/i);
+  assert.match(html, /GDPR/);
+  assert.match(html, /CCPA|CPRA/);
+  assert.match(html, /children/i);
+  assert.match(html, /AES-256-GCM/, 'the encryption used should be stated');
+  assert.match(html, /PBKDF2/);
+});
+
+test('the privacy policy states the rights and how to exercise them', () => {
+  const html = read('privacy.html');
+  for (const right of ['Access', 'Portability', 'Erasure', 'Rectification']) {
+    assert.ok(html.includes(right), `the ${right} right is not covered`);
+  }
+  assert.match(html, /Erase everything/, 'the in-app deletion route must be named');
+});
+
+test('the terms cover the risks that are genuinely the user’s', () => {
+  const html = read('terms.html');
+  assert.match(html, /Recording other people/i, 'consent for recording must be addressed');
+  assert.match(html, /passphrase/i, 'the unrecoverable passphrase must be stated');
+  assert.match(html, /as is/i, 'the warranty position must be stated');
+  assert.match(html, /cannot be recovered/i);
+});
+
+test('about carries a mission, a vision and a way to make contact', () => {
+  const html = read('about.html');
+  assert.match(html, /Our mission/i);
+  assert.match(html, /Our vision/i);
+  assert.match(html, /Contact/i);
+  assert.match(html, /mailto:/, 'there must be a contact address');
+  assert.match(html, /Security disclosure/i, 'a security contact is expected by both app stores');
+});
+
+test('no placeholder survived into the published files', () => {
+  const files = ['about.html', 'privacy.html', 'terms.html', 'index.html',
+                 'robots.txt', 'sitemap.xml'];
+  for (const f of files) {
+    assert.ok(!read(f).includes('REPLACE-WITH-YOUR-'),
+      `${f} still contains an unfilled placeholder`);
+  }
+});
+
+test('the contact address is real and used consistently', () => {
+  const email = 'kofiappiahkss@gmail.com';
+  for (const f of ['about.html', 'privacy.html', 'terms.html']) {
+    assert.ok(read(f).includes(`mailto:${email}`), `${f} has no working contact link`);
+  }
+});
+
+test('every absolute link points at the published site, with the right case', () => {
+  const SITE = 'https://kofiappiahkss1.github.io/Curio';
+  for (const f of ['index.html', 'sitemap.xml', 'robots.txt']) {
+    const urls = [...read(f).matchAll(/https:\/\/kofiappiahkss1\.github\.io[^"<\s)]*/g)].map((m) => m[0]);
+    assert.ok(urls.length, `${f} has no absolute site link`);
+    for (const u of urls) {
+      assert.ok(u.startsWith(SITE),
+        `${f} points at ${u} — the path is case-sensitive and must match the repository exactly`);
+    }
+  }
+});
+
+test('the social preview and sitemap resolve to real files', () => {
+  assert.ok(read('index.html').includes('/Curio/og-image.png'));
+  assert.ok(existsSync(join(root, 'og-image.png')), 'og-image.png must exist to be served');
+  assert.ok(existsSync(join(root, 'sitemap.xml')));
+});
+
+test('the Android package targets the host and the sub-path correctly', () => {
+  const twa = JSON.parse(read('store/twa-manifest.json'));
+  assert.equal(twa.host, 'kofiappiahkss1.github.io', 'the host must be bare, with no path');
+  assert.equal(twa.startUrl, '/Curio/app.html', 'the start URL carries the repository path');
+  assert.match(twa.fullScopeUrl, /\/Curio\/$/);
+  // the signing fingerprint only exists after a build, so it is expected to remain
+  assert.match(read('store/assetlinks.template.json'), /REPLACE-WITH-YOUR-SIGNING-CERT/);
+});
+
+test('the pages load no resource from another origin', () => {
+  // A *link* to GitHub is fine — a person chose to click it. A *resource*
+  // loaded from elsewhere is not: it would tell a third party that someone
+  // read the privacy page. Only the second is a leak, so only it is checked.
+  for (const p of ['about.html', 'privacy.html', 'terms.html', 'index.html', 'app.html']) {
+    const html = read(p);
+    const resources = [
+      ...html.matchAll(/<(?:script|img|iframe|source|video|audio)[^>]+src="([^"]+)"/gi),
+      ...html.matchAll(/<link[^>]+href="([^"]+)"/gi),
+    ].map((m) => m[1]);
+
+    const offsite = resources.filter((u) => /^https?:\/\//i.test(u)
+      && !u.startsWith('https://kofiappiahkss1.github.io/'));
+    assert.deepEqual(offsite, [], `${p} loads from another origin: ${offsite.join(', ')}`);
+  }
+});
+
+test('outbound links open safely', () => {
+  for (const p of ['about.html', 'privacy.html', 'terms.html']) {
+    const html = read(p);
+    for (const m of html.matchAll(/<a[^>]+href="https?:\/\/[^"]+"[^>]*>/gi)) {
+      const tag = m[0];
+      if (tag.includes('target="_blank"')) {
+        assert.match(tag, /rel="[^"]*noopener/, `${p} opens a new tab without noopener`);
+      }
+    }
+  }
+});

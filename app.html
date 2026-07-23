@@ -823,6 +823,18 @@ details.capsule[open]{border-color:color-mix(in srgb,var(--slate) 45%,transparen
   text-transform:uppercase;font-weight:700;cursor:pointer}
 .buildstamp{font-family:var(--mono);font-size:14px;letter-spacing:.08em;color:var(--brass)}
 
+
+/* ================= LINK ROWS ================= */
+.linkrow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.linkrow:last-of-type{border-bottom:none}
+.linkrow .lr{display:flex;flex-direction:column;gap:2px;min-width:0}
+.linkrow .lr b{font-family:var(--serif);font-size:15px;font-weight:500;color:var(--ivory)}
+.linkrow .lr i{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(242,235,219,.4)}
+.linkrow .chev{color:var(--brass);font-size:14px;flex-shrink:0}
+html.is-hover .linkrow:hover .lr b{color:var(--brass)}
+
 /* ---------- RTL adjustments ---------- */
 [dir=rtl] .tl{padding-left:0;padding-right:26px}
 [dir=rtl] .tl::before{left:auto;right:6px}

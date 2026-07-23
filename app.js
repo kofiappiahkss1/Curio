@@ -24,7 +24,7 @@ import * as book from './book.js';
 import { withLock, LOCK_SYNC, LOCK_WRITE } from './locks.js';
 
 /** Bumped with every release, and shown in the Vault so a stale cache is obvious. */
-export const BUILD = '2026.07.23-12';
+export const BUILD = '2026.07.23-13';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -914,6 +914,14 @@ function viewVault() {
     <div class="rail-label" style="margin-top:22px">${esc(U.dangerZone)}</div>
     <button class="wide-btn danger" id="wipe">${esc(U.wipeBtn)}</button>
     <div class="discard-note" style="margin-top:14px"><b>${esc(U.aboutTitle)}</b> ${esc(U.aboutBody)}</div>
+
+    <div class="rail-label" style="margin-top:24px">${esc(U.legal)}</div>
+    <a class="linkrow" href="about.html" target="_blank" rel="noopener">
+      <span class="lr"><b>${esc(U.linkAbout)}</b><i>${esc(U.linkAboutSub)}</i></span><span class="chev">↗</span></a>
+    <a class="linkrow" href="privacy.html" target="_blank" rel="noopener">
+      <span class="lr"><b>${esc(U.linkPrivacy)}</b><i>${esc(U.linkPrivacySub)}</i></span><span class="chev">↗</span></a>
+    <a class="linkrow" href="terms.html" target="_blank" rel="noopener">
+      <span class="lr"><b>${esc(U.linkTerms)}</b><i>${esc(U.linkTermsSub)}</i></span><span class="chev">↗</span></a>
 
     <div class="rail-label" style="margin-top:24px">${esc(U.version)}</div>
     <div class="kitinfo"><b class="buildstamp">${esc(BUILD)}</b><br>${esc(U.versionBody)}</div>
