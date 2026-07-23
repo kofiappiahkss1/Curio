@@ -26,6 +26,16 @@ globalThis.Blob = window.Blob;
 globalThis.URL = window.URL;
 globalThis.confirm = () => true;
 define('matchMedia', window.matchMedia ? window.matchMedia.bind(window) : () => ({ matches: false }));
+
+// A controllable network, so connectivity can actually be exercised.
+let ONLINE = true;
+Object.defineProperty(window.navigator, 'onLine', { get: () => ONLINE, configurable: true });
+define('fetch', async (url) => {
+  if (!ONLINE) throw new TypeError('Failed to fetch');
+  return { ok: true, status: 200, url: String(url) };
+});
+window.addEventListener('offline', () => { ONLINE = false; });
+window.addEventListener('online', () => { ONLINE = true; });
 globalThis.addEventListener = window.addEventListener.bind(window);
 
 Object.defineProperty(window.navigator, 'mediaDevices', {
@@ -294,4 +304,26 @@ test('Archive shows the year grid', async () => {
   await settle();
   assert.ok($('body').querySelector('.year'), 'year-in-pixels renders');
   assert.equal($('body').querySelectorAll('.px').length, new Date().getFullYear() % 4 === 0 ? 366 : 365);
+});
+
+test('the connection badge does not claim you are offline while connected', async () => {
+  const label = $('netlabel').textContent.trim();
+  assert.ok(label.length > 0, 'the badge says something');
+  // The old bug: the online label was "Offline-ready", which reads as "you are offline".
+  assert.doesNotMatch(label, /^offline/i,
+    'the connected label must not begin with the word "offline"');
+});
+
+test('going offline is reported plainly, and coming back is re-checked', async () => {
+  const label = () => $('netlabel').textContent.trim();
+
+  window.dispatchEvent(new window.Event('offline'));
+  await settle();
+  assert.match(label(), /no internet|offline|no network/i,
+    'losing the connection should say so in plain words');
+
+  window.dispatchEvent(new window.Event('online'));
+  await settle();
+  await settle();
+  assert.ok(label().length > 0, 'the badge recovers rather than sticking blank');
 });

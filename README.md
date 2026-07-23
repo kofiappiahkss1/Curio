@@ -6,7 +6,7 @@ A private museum of your ordinary days. Installs on any phone or laptop straight
 from the web. No account, no API key, no server. Works fully offline, survives a
 lost phone, and speaks fourteen languages.
 
-**120 tests · 0 failures**
+**157 tests · 0 failures**
 
 ---
 
@@ -61,6 +61,38 @@ Edge on Android and desktop; iPhone uses Recovery Kits by hand.
 **Today in history** — a bundled almanac of 733 events across all 366 days,
 working with the radio off. Optionally enriched from Wikipedia when you happen
 to be online, sending only the date.
+
+**Meetings and conferences** — Curio records the room, keeps a running
+transcript where the browser can produce one, and lets you mark moments as they
+happen. Afterwards it writes up what was **decided**, what someone **agreed to
+do**, and what was **left open** — extracted from the transcript on the device,
+with no model and no network. The session saves itself every twenty seconds, so
+a flat battery ninety minutes in costs you nothing.
+
+**Consent is a required step, not fine print.** Recording a meeting records
+other people, and in much of the world that needs everyone's agreement rather
+than just yours. Curio asks you to confirm the room has been told — every time —
+and writes that confirmation, with its timestamp, into the record itself.
+
+**Knowing you** — an optional name, date of birth and country, all stored on
+the device. Curio greets you properly, counts the days of your life, remembers
+birthdays you add, and shows the public holidays where you actually live. Your
+country is detected from the phone's own time zone — no location permission, no
+network call, and easily corrected.
+
+**Public holidays for 34 countries**, computed rather than listed, so they never
+go stale: fixed dates, "fourth Thursday of November", everything hung off Easter,
+and the Islamic calendar through the browser's own support. Ghana, Nigeria,
+Kenya, South Africa and Tanzania are all in, alongside the usual suspects.
+
+**Motion that means something** — views arrive from below, cards deal themselves
+out one after another, the streak flame flickers while it's alive, a birthday
+card catches the light. All of it vanishes under `prefers-reduced-motion`.
+
+**Three layouts, chosen properly** — phone, tablet and desktop are decided by
+width *and* pointer type together, because a tablet in portrait is as narrow as
+a large phone. Touch devices get bigger targets; mouse devices get hover states
+and keyboard shortcuts.
 
 **Weighing itself** — words cost almost nothing; photos and voice are the only
 things that grow. The Vault shows exactly where the weight sits, how fast the
@@ -126,6 +158,10 @@ core.js      GUARD (vault) · COMPOSE (placards) · WEAVE (patterns)
 crypto.js    PBKDF2 + AES-GCM — the Recovery Kit cipher
 voice.js     recording (private) and dictation (opt-in, honest about it)
 storage.js   measuring, projecting and reclaiming space
+profile.js   name, birthday, offline country detection
+holidays.js  computed public holidays for 34 countries
+device.js    phone / tablet / desktop, by width and pointer
+meeting.js   long recording, live transcript, extraction, autosave
 history.js   the bundled almanac + widget snapshot
 backup.js    kits, auto-backup to a folder, restore & merge, exports
 share.js     renders placards to shareable images, on-device

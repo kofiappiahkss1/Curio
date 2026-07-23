@@ -456,6 +456,221 @@ input[type=time].field{color-scheme:dark}
 .wide-btn .saves{float:right;color:var(--sage);font-weight:700}
 [dir=rtl] .wide-btn .saves{float:left}
 
+
+/* ================================================================== *
+ * MOTION
+ * Everything here is short, eased and purposeful. Nothing bounces for
+ * the sake of it, and all of it disappears under prefers-reduced-motion.
+ * ================================================================== */
+:root{
+  --ease-out: cubic-bezier(.22,.9,.3,1);
+  --ease-spring: cubic-bezier(.34,1.56,.5,1);
+}
+
+/* views arrive from just below, never a hard cut */
+.view{animation:viewIn .42s var(--ease-out) both}
+@keyframes viewIn{
+  from{opacity:0;transform:translateY(14px) scale(.995)}
+  to{opacity:1;transform:none}
+}
+
+/* cards deal themselves out, one after another */
+.card,.thread,.tl-item,.stat,.perm-row{animation:dealIn .5s var(--ease-out) both}
+@keyframes dealIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
+.card:nth-child(1),.thread:nth-child(1){animation-delay:.02s}
+.card:nth-child(2),.thread:nth-child(2){animation-delay:.07s}
+.card:nth-child(3),.thread:nth-child(3){animation-delay:.12s}
+.card:nth-child(4),.thread:nth-child(4){animation-delay:.17s}
+.card:nth-child(5),.thread:nth-child(5){animation-delay:.22s}
+.card:nth-child(n+6){animation-delay:.26s}
+.stat:nth-child(2){animation-delay:.05s}
+.stat:nth-child(3){animation-delay:.1s}
+.stat:nth-child(4){animation-delay:.15s}
+.tl-item:nth-child(odd){animation-delay:.04s}
+
+/* the vitrine lifts into its case */
+.vitrine{animation:vitrineIn .6s var(--ease-out) both}
+@keyframes vitrineIn{
+  from{opacity:0;transform:translateY(20px) scale(.98)}
+  to{opacity:1;transform:none}
+}
+
+/* the greeting writes itself in */
+.hello{animation:helloIn .55s var(--ease-out) both}
+@keyframes helloIn{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:none}
+}
+
+/* pressable things answer the finger */
+.card:active{transform:scale(.985)}
+.wide-btn,.mini-btn,.pill,.kind,.tab,.perm-btn,.moodbtn{transition:transform .16s var(--ease-out),background .2s,border-color .2s,color .2s}
+.wide-btn:active,.mini-btn:active,.pill:active,.kind:active,.perm-btn:active{transform:scale(.97)}
+.kind:active{background:rgba(201,162,75,.14)}
+.moodbtn:active{transform:scale(.93)}
+.moodbtn.on{animation:moodPop .34s var(--ease-spring)}
+@keyframes moodPop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+/* the capture button breathes very slightly, so it reads as the way in */
+.fab{transition:transform .2s var(--ease-spring),box-shadow .25s}
+.fab:active{transform:translateX(-50%) scale(.9)}
+@media (min-width:900px){ .fab:active{transform:scale(.9)} }
+.fab::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+  border:1.5px solid rgba(201,162,75,.4);opacity:0;animation:halo 3.6s ease-in-out infinite}
+@keyframes halo{
+  0%,100%{opacity:0;transform:scale(.9)}
+  40%{opacity:.55;transform:scale(1)}
+  70%{opacity:0;transform:scale(1.12)}
+}
+
+/* the sheet springs up rather than sliding flatly */
+.sheet{transition:transform .38s var(--ease-spring)}
+.sheet-bg{transition:opacity .28s ease}
+.sheet-bg{opacity:0} .sheet-bg.open{opacity:1}
+
+/* toast */
+.toast{transition:opacity .28s var(--ease-out),transform .34s var(--ease-spring)}
+
+/* the streak flame flickers when it is alive */
+.streakbar .flame{display:inline-block;animation:flicker 2.8s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes flicker{
+  0%,100%{transform:scale(1) rotate(0)}
+  30%{transform:scale(1.07) rotate(-3deg)}
+  60%{transform:scale(.97) rotate(2deg)}
+}
+
+/* today in history slides in from the side it belongs to */
+.worldbox{animation:worldIn .55s var(--ease-out) .08s both}
+@keyframes worldIn{
+  from{opacity:0;transform:translateX(14px)}
+  to{opacity:1;transform:none}
+}
+@keyframes worldInRtl{
+  from{opacity:0;transform:translateX(-14px)}
+  to{opacity:1;transform:none}
+}
+[dir=rtl] .worldbox{animation-name:worldInRtl}
+
+/* on-this-day glows once, then settles */
+.otd{animation:otdIn .6s var(--ease-out) both}
+@keyframes otdIn{
+  from{opacity:0;transform:translateY(12px);box-shadow:0 0 0 0 rgba(201,162,75,0)}
+  60%{box-shadow:0 0 40px -8px rgba(201,162,75,.32)}
+  to{opacity:1;transform:none;box-shadow:0 0 0 0 rgba(201,162,75,0)}
+}
+
+/* the storage bar fills rather than appearing */
+.sbar i{animation:fillBar .8s var(--ease-out) both}
+@keyframes fillBar{from{width:0 !important}}
+
+/* the year grid lights up left to right */
+.px{animation:pixIn .5s ease both}
+@keyframes pixIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+
+/* birthday: a quiet celebration, not confetti everywhere */
+.birthday{position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(201,162,75,.2),rgba(184,129,126,.14));
+  border:1px solid rgba(201,162,75,.42);border-radius:16px;padding:18px;margin-bottom:20px;
+  animation:otdIn .7s var(--ease-out) both}
+.birthday::after{content:"";position:absolute;top:-60%;left:-30%;width:60%;height:220%;
+  background:linear-gradient(90deg,transparent,rgba(242,235,219,.14),transparent);
+  transform:rotate(18deg);animation:sheen 4.5s ease-in-out infinite}
+@keyframes sheen{0%{left:-40%}55%{left:120%}100%{left:120%}}
+.birthday .bk{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brass);display:block;margin-bottom:9px;position:relative}
+.birthday h3{font-family:var(--serif);font-size:22px;font-weight:500;margin-bottom:5px;position:relative}
+.birthday p{font-size:14.5px;line-height:1.5;color:rgba(242,235,219,.75);position:relative}
+
+/* holiday card */
+.holidaybox{background:var(--dusk-2);border:1px solid var(--line);border-left:3px solid var(--sage);
+  border-radius:14px;padding:14px 16px;margin-bottom:20px;animation:dealIn .5s var(--ease-out) .06s both}
+[dir=rtl] .holidaybox{border-left:1px solid var(--line);border-right:3px solid var(--sage)}
+.holidaybox .hk{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--sage);display:block;margin-bottom:6px}
+.holidaybox h4{font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:3px}
+.holidaybox p{font-size:13px;line-height:1.45;color:rgba(242,235,219,.6)}
+
+/* the greeting block */
+.hello{margin-bottom:16px}
+.hello .g{font-family:var(--serif);font-size:26px;font-weight:500;line-height:1.15;color:var(--ivory)}
+.hello .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(242,235,219,.42);margin-top:6px}
+
+/* ================================================================== *
+ * DEVICE-AWARE LAYOUT
+ * ================================================================== */
+/* tablets: two columns, but keep finger-sized targets */
+@media (min-width:700px) and (max-width:1099px){
+  html[data-device="tablet"] .body{padding:26px 34px calc(150px + var(--safe-bottom));max-width:none}
+  html[data-device="tablet"] #app{max-width:900px}
+  html[data-device="tablet"] .statgrid{grid-template-columns:repeat(4,1fr)}
+  html[data-device="tablet"] .kinds{grid-template-columns:repeat(4,1fr)}
+  html[data-device="tablet"] .sheet{max-width:620px;left:50%;transform:translate(-50%,100%)}
+  html[data-device="tablet"] .sheet.open{transform:translate(-50%,0)}
+}
+/* touch devices get larger hit areas everywhere */
+html.is-touch .mini-btn{padding:13px 10px}
+html.is-touch .tab{padding:4px 0}
+html.is-touch .pill{padding:11px 15px}
+/* mouse devices get hover states; touch devices must not inherit sticky ones */
+html.is-hover .card:hover{box-shadow:0 14px 30px -14px rgba(0,0,0,.7);transform:translateY(-1px)}
+html.is-hover .wide-btn:hover{border-color:rgba(201,162,75,.45)}
+html.is-hover .tl-item:hover .tl-h{color:var(--brass)}
+html.is-hover .kind:hover{border-color:rgba(201,162,75,.4)}
+/* installed apps lose the browser chrome, so give the top a little more room */
+html[data-standalone="true"] .topbar{padding-top:calc(var(--safe-top) + 22px)}
+
+
+/* ================= MEETING ================= */
+.consentbox{background:rgba(184,129,126,.1);border:1px solid rgba(184,129,126,.4);
+  border-radius:14px;padding:16px 17px;margin-bottom:14px}
+.consentbox p{font-size:14px;line-height:1.55;color:rgba(242,235,219,.8);margin-bottom:10px}
+.consentbox p:last-child{margin-bottom:0}
+.consentbox .say{font-style:italic;color:var(--brass);padding-top:10px;
+  border-top:1px solid rgba(184,129,126,.28)}
+
+.meetscreen{position:fixed;inset:0;z-index:150;background:
+  radial-gradient(110% 70% at 50% 0%,#2b2540,#1b1828 60%,#141220);
+  display:flex;flex-direction:column;padding:calc(var(--safe-top) + 20px) 20px calc(16px + var(--safe-bottom));
+  max-width:560px;margin:0 auto;animation:viewIn .4s var(--ease-out) both}
+@media (min-width:900px){ .meetscreen{max-width:680px;padding-inline:36px} }
+.meethead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}
+.meethead h2{font-family:var(--serif);font-size:23px;font-weight:500;line-height:1.2;margin-top:4px}
+.mlive{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--rose)}
+.mlive .pip{width:9px;height:9px;border-radius:50%;background:var(--rose);
+  animation:livepip 1.5s ease-in-out infinite}
+@keyframes livepip{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(184,129,126,.5)}
+  60%{opacity:.55;box-shadow:0 0 0 10px rgba(184,129,126,0)}}
+.mclock{font-family:var(--mono);font-size:29px;color:var(--ivory);letter-spacing:.04em;flex-shrink:0}
+
+.mtranscript{flex:1;min-height:110px;background:var(--dusk-2);border:1px solid var(--line);
+  border-radius:14px;padding:14px 15px;margin-bottom:12px;overflow:hidden;display:flex;flex-direction:column}
+.mtranscript .tlabel{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--slate);margin-bottom:9px;flex-shrink:0}
+.mtranscript p{flex:1;overflow-y:auto;font-size:14.5px;line-height:1.6;color:rgba(242,235,219,.74);
+  white-space:pre-wrap}
+.mnotes{min-height:90px;margin-bottom:10px}
+.mmarks{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;min-height:4px}
+.markchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;padding:5px 10px;border-radius:16px;
+  background:rgba(201,162,75,.16);border:1px solid rgba(201,162,75,.35);color:var(--brass);
+  animation:moodPop .3s var(--ease-spring)}
+.mfoot{flex-shrink:0}
+.mrow{display:flex;gap:10px}
+.mrow .wide-btn{margin-bottom:0}
+
+/* the write-up inside a card */
+.meetsum{margin-bottom:12px}
+.msec{margin-bottom:11px}
+.msec span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+.msec ul{margin:0;padding-inline-start:15px}
+.msec li{font-size:13.5px;line-height:1.5;color:#4a4234;margin-bottom:3px}
+.msec p{font-size:13.5px;line-height:1.5;color:#4a4234}
+
 /* ---------- RTL adjustments ---------- */
 [dir=rtl] .tl{padding-left:0;padding-right:26px}
 [dir=rtl] .tl::before{left:auto;right:6px}

@@ -3,10 +3,10 @@
  * The whole app is cached on first visit; afterwards every request is served
  * from the phone. Network is only ever consulted to look for a newer version.
  */
-const CACHE = 'curio-v6';
+const CACHE = 'curio-v9';
 const SHELL = [
   './', './index.html', './app.html',
-  './app.js', './core.js', './store.js', './i18n.js', './crypto.js', './backup.js', './share.js', './voice.js', './history.js', './storage.js',
+  './app.js', './core.js', './store.js', './i18n.js', './crypto.js', './backup.js', './share.js', './voice.js', './history.js', './storage.js', './profile.js', './holidays.js', './device.js', './meeting.js',
   './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png',
   './icons/icon-maskable-512.png',
@@ -27,6 +27,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+
+  // The connectivity probe must actually touch the network, otherwise the
+  // cache would answer it and the app would always believe it is online.
+  if (new URL(req.url).searchParams.has('curio-ping')) return;
 
   // Share target posts land here as a navigation; let them through to index.
   e.respondWith(

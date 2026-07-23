@@ -19,7 +19,7 @@ import { getLocale, plural, fill } from './i18n.js';
 
 export const SEALED = ['banking', 'health', 'messages', 'passwords'];
 
-export const SOURCE_KEYS = ['photo', 'voice', 'place', 'read', 'note', 'meal', 'person'];
+export const SOURCE_KEYS = ['photo', 'voice', 'meeting', 'place', 'read', 'note', 'meal', 'person'];
 /** Localised source list for the vault + capture sheet. */
 export const sources = (L) =>
   SOURCE_KEYS.map((key) => ({ key, label: L.ui.kinds[key].label, detail: L.ui.kinds[key].detail }));

@@ -4,7 +4,7 @@ import { LOCALES, getLocale, detectLocale, fill, plural } from '../i18n.js';
 import { compose, composeDay, weave, sources } from '../core.js';
 
 const CODES = Object.keys(LOCALES);
-const KINDS = ['photo', 'voice', 'place', 'read', 'note', 'meal', 'person'];
+const KINDS = ['photo', 'voice', 'meeting', 'place', 'read', 'note', 'meal', 'person'];
 const PODS = ['night', 'early', 'morning', 'midday', 'afternoon', 'evening', 'late'];
 
 test('every locale exposes a complete UI surface', () => {
@@ -113,7 +113,7 @@ test('an unknown locale code falls back rather than crashing', () => {
 
 test('source labels are localised for the vault and capture sheet', () => {
   const ja = sources(getLocale('ja'));
-  assert.equal(ja.length, 7);
+  assert.equal(ja.length, 8);
   assert.equal(ja.find((s) => s.key === 'meal').label, '食事');
   const sw = sources(getLocale('sw'));
   assert.equal(sw.find((s) => s.key === 'photo').label, 'Picha');

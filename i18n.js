@@ -17,6 +17,7 @@ const EN_GB = {
   ui: {
     tagline: 'A diary that writes itself',
     onPhone: 'On this phone', offlineReady: 'Offline-ready', offlineWorking: 'Offline · working',
+    netOnline: 'Connected', netOffline: 'No internet · still working', netChecking: 'Checking…',
     tabs: { today: 'Today', archive: 'Archive', threads: 'Threads', vault: 'Vault' },
 
     todayEmptyTitle: 'The day is still blank',
@@ -70,6 +71,9 @@ const EN_GB = {
                 hint: 'First names are enough.', ph: 'e.g. Anna' },
       voice:  { label: 'Voice', detail: 'Something said out loud', title: 'Say it instead',
                 hint: 'Up to three minutes. It stays on this phone.', ph: 'A word about it (optional)' },
+      meeting:{ label: 'Meeting', detail: 'A conference or a call', title: 'Take notes in a meeting',
+                hint: 'Records, transcribes where it can, and writes up what was decided.',
+                ph: 'What is this meeting?' },
     },
 
     camera: { open: 'Open the camera', take: 'Take the picture', choose: 'Choose from library',
@@ -129,6 +133,67 @@ const EN_GB = {
     exportPlain: 'Export unencrypted copy',
     exportMarkdown: 'Export as readable text',
     dangerZone: 'Careful',
+
+    // ---- meetings ----
+    meeting: {
+      label: 'Meeting', detail: 'A conference or a call',
+      title: 'Take notes in a meeting',
+      hint: 'Curio records, keeps a running transcript where it can, and afterwards pulls out what was decided.',
+      nameIt: 'What is this meeting?', namePh: 'e.g. Launch review',
+      whoPh: 'Who is here? (optional)',
+      consentTitle: 'Does the room know?',
+      consentBody: 'You are about to record other people. In many countries everyone present has to agree to that, not just you. Please tell them before you start \u2014 Curio writes your confirmation into the record.',
+      consentAsk: 'Say something like: \u201cI\u2019m going to record this so I don\u2019t miss anything \u2014 is everyone alright with that?\u201d',
+      consentYes: 'Yes, everyone agreed', consentNo: 'Not yet \u2014 go back',
+      consentNoted: 'Consent noted at {t}.',
+      start: 'Start the meeting', stop: 'End and save', pause: 'Pause',
+      live: 'Recording', elapsed: 'Elapsed',
+      markIt: 'Mark this moment', marked: 'Marked at {t}.',
+      markPh: 'What just happened? (optional)',
+      notesPh: 'Type anything the recording will miss\u2026',
+      transcriptOff: 'Live transcript is off. Audio is still being recorded.',
+      transcriptOn: 'Live transcript',
+      transcriptEmpty: 'Listening\u2026',
+      transcriptWarn: 'Live transcript uses the browser\u2019s speech service, which sends audio off the device. The recording itself always stays here.',
+      enableTranscript: 'Turn on live transcript',
+      saved: 'Meeting saved.', discard: 'Discard', discarded: 'Discarded.',
+      confirmDiscard: 'Throw away this meeting? The recording and notes will be lost.',
+      summary: 'In short', decisions: 'Decided', actions: 'To do',
+      questions: 'Left open', marks: 'Marked moments', notes: 'Your notes',
+      lasted: '{n} minutes', nDecisions: '{n} decided', nActions: '{n} to do', nMarks: '{n} marked',
+      recovered: 'An interrupted meeting was found.',
+      recoveredBody: 'Curio saved it as it went. You can keep what it has, or throw it away.',
+      recoverKeep: 'Keep it', recoverDrop: 'Throw it away',
+      longWarning: 'A long meeting is a large recording \u2014 roughly {x} an hour at this quality.',
+    },
+
+    // ---- you ----
+    you: 'You', profile: 'About you',
+    profileBody: 'Optional, and it never leaves this phone. It lets Curio greet you properly, count your days, and know which holidays matter where you live.',
+    yourName: 'Your name', yourNamePh: 'What should Curio call you?',
+    yourDob: 'Your date of birth', yourDobHelp: 'Used for your age, your birthday, and nothing else.',
+    yourCountry: 'Where you live', countryDetected: 'Detected from your phone\u2019s time zone \u2014 change it if that\u2019s wrong.',
+    countryPick: 'Choose a country', countryNone: 'Not set',
+    greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', night: 'Still up' },
+    greetingName: '{g}, {name}.', greetingPlain: '{g}.',
+    daysAlive: 'Day {n} of your life',
+    ageIs: '{n} years old',
+
+    // ---- birthdays ----
+    birthdayYours: 'Happy birthday.', birthdayYoursSub: 'You are {n} today. Worth keeping something.',
+    birthdayTheirs: '{name} turns {n} today.',
+    birthdaySoon: '{name} turns {n} in {d} days.',
+    birthdays: 'Birthdays', addPerson: 'Add a birthday',
+    personName: 'Their name', personDob: 'Their date of birth',
+    personAdded: 'Added.', personRemoved: 'Removed.',
+    noBirthdays: 'No birthdays saved yet.',
+
+    // ---- holidays ----
+    holidayToday: 'Today is {name}.', holidayIn: '{name} is in {d} days.',
+    holidayTomorrow: '{name} is tomorrow.',
+    holidays: 'Holidays', holidaysOff: 'Show public holidays',
+    holidayApprox: 'date varies by observance',
+    holidayUpcoming: 'Coming up',
 
     // ---- storage ----
     storageTitle: 'What it all weighs',
@@ -273,6 +338,7 @@ const EN_GB = {
       meal:   ['{x}', 'The {x}', 'Eating {x}'],
       person: ['Time with {x}', '{x} again', 'An evening with {x}'],
       voice:  ['Said out loud', 'A voice note', 'Worth saying aloud'],
+      meeting:['{x}', 'Meeting: {x}', 'In the room: {x}'],
     },
     bodies: {
       photo:  ['{o} you framed something and kept it.', '{o} something was worth stopping for.',
@@ -289,6 +355,9 @@ const EN_GB = {
       voice:  ['{o} you said it out loud rather than write it down.',
                '{o} you recorded this while it was still fresh.',
                '{o} some things are easier spoken \u2014 so you spoke them.'],
+      meeting:['{o} a room full of talk, kept so you would not have to remember it.',
+               '{o} you sat through {x} and let Curio hold the details.',
+               '{o} the meeting happened, and this is what survived it.'],
     },
     returning: {
       place:  'The {n}th time here — it has become one of yours.',
@@ -351,6 +420,7 @@ const EN_NG = {
   ui: {
     tagline: 'Diary wey dey write itself',
     onPhone: 'For dis phone', offlineReady: 'E fit work offline', offlineWorking: 'Offline · e dey work',
+    netOnline: 'You dey online', netOffline: 'No network · e still dey work', netChecking: 'Dey check…',
     tabs: { today: 'Today', archive: 'Archive', threads: 'Pattern', vault: 'Vault' },
     todayEmptyTitle: 'Today still empty',
     todayEmptyBody: 'Press + make you keep the first thing. Picture, where you dey, wetin you chop — anything.',
@@ -471,6 +541,7 @@ const ES_ES = {
   ui: {
     tagline: 'Un diario que se escribe solo',
     onPhone: 'En este móvil', offlineReady: 'Listo sin conexión', offlineWorking: 'Sin conexión · funcionando',
+    netOnline: 'Conectado', netOffline: 'Sin internet · sigue funcionando', netChecking: 'Comprobando…',
     tabs: { today: 'Hoy', archive: 'Archivo', threads: 'Hilos', vault: 'Cámara' },
     todayEmptyTitle: 'El día está en blanco',
     todayEmptyBody: 'Toca + para guardar lo primero. Una foto, dónde estás, qué comiste — lo que sea.',
@@ -599,6 +670,7 @@ const ES_419 = {
   name: 'Español (Latinoamérica)', dir: 'ltr', tag: 'ES', base: 'es-ES',
   ui: {
     onPhone: 'En este celular', offlineReady: 'Listo sin internet', offlineWorking: 'Sin internet · funcionando',
+    netOnline: 'Conectado', netOffline: 'Sin internet · sigue andando', netChecking: 'Chequeando…',
     todayEmptyBody: 'Tocá + para guardar lo primero. Una foto, dónde estás, qué comiste — lo que sea.',
     archiveSub: 'Acá, en este celular. En ningún otro lado.',
     vaultSealTitle: 'Todo vive en este celular',
@@ -628,6 +700,7 @@ const PT_BR = {
   ui: {
     tagline: 'Um diário que se escreve sozinho',
     onPhone: 'Neste celular', offlineReady: 'Funciona offline', offlineWorking: 'Offline · funcionando',
+    netOnline: 'Conectado', netOffline: 'Sem internet · ainda funcionando', netChecking: 'Verificando…',
     tabs: { today: 'Hoje', archive: 'Arquivo', threads: 'Fios', vault: 'Cofre' },
     todayEmptyTitle: 'O dia ainda está em branco',
     todayEmptyBody: 'Toque em + para guardar a primeira coisa. Uma foto, onde você está, o que comeu — qualquer coisa.',
@@ -756,6 +829,7 @@ const FR_FR = {
   ui: {
     tagline: 'Un journal qui s’écrit tout seul',
     onPhone: 'Sur ce téléphone', offlineReady: 'Prêt hors ligne', offlineWorking: 'Hors ligne · en marche',
+    netOnline: 'Connecté', netOffline: 'Sans internet · fonctionne quand même', netChecking: 'Vérification…',
     tabs: { today: 'Aujourd’hui', archive: 'Archives', threads: 'Fils', vault: 'Coffre' },
     todayEmptyTitle: 'La journée est encore blanche',
     todayEmptyBody: 'Touchez + pour garder la première chose. Une photo, où vous êtes, ce que vous avez mangé — n’importe quoi.',
@@ -885,6 +959,7 @@ const DE_DE = {
   ui: {
     tagline: 'Ein Tagebuch, das sich selbst schreibt',
     onPhone: 'Auf diesem Handy', offlineReady: 'Offline bereit', offlineWorking: 'Offline · läuft',
+    netOnline: 'Verbunden', netOffline: 'Kein Internet · läuft trotzdem', netChecking: 'Prüfe…',
     tabs: { today: 'Heute', archive: 'Archiv', threads: 'Fäden', vault: 'Tresor' },
     todayEmptyTitle: 'Der Tag ist noch leer',
     todayEmptyBody: 'Tippe auf +, um das Erste zu behalten. Ein Foto, wo du bist, was du gegessen hast — irgendetwas.',
@@ -1013,6 +1088,7 @@ const AR = {
   ui: {
     tagline: 'يوميات تكتب نفسها',
     onPhone: 'على هذا الهاتف', offlineReady: 'يعمل دون إنترنت', offlineWorking: 'دون إنترنت · يعمل',
+    netOnline: 'متصل', netOffline: 'بلا إنترنت · وما زال يعمل', netChecking: 'جارٍ الفحص…',
     tabs: { today: 'اليوم', archive: 'الأرشيف', threads: 'خيوط', vault: 'الخزنة' },
     todayEmptyTitle: 'اليوم ما زال فارغًا',
     todayEmptyBody: 'اضغط + لتحفظ أول شيء. صورة، أين أنت، ماذا أكلت — أي شيء.',
@@ -1137,6 +1213,7 @@ const SW = {
   ui: {
     tagline: 'Shajara inayojiandika yenyewe',
     onPhone: 'Kwenye simu hii', offlineReady: 'Tayari bila mtandao', offlineWorking: 'Bila mtandao · inafanya kazi',
+    netOnline: 'Umeunganishwa', netOffline: 'Hakuna intaneti · bado inafanya kazi', netChecking: 'Inakagua…',
     tabs: { today: 'Leo', archive: 'Kumbukumbu', threads: 'Nyuzi', vault: 'Kasha' },
     todayEmptyTitle: 'Siku bado ni tupu',
     todayEmptyBody: 'Gusa + kuhifadhi kitu cha kwanza. Picha, ulipo, ulichokula — chochote.',
@@ -1260,6 +1337,7 @@ const ZU = {
   ui: {
     tagline: 'Idayari ezibhalela yona',
     onPhone: 'Kule foni', offlineReady: 'Ikulungele ngaphandle kwe-inthanethi', offlineWorking: 'Ayixhunyiwe · iyasebenza',
+    netOnline: 'Uxhunyiwe', netOffline: 'Ayikho i-inthanethi · isasebenza', netChecking: 'Iyahlola…',
     tabs: { today: 'Namuhla', archive: 'Ingobo', threads: 'Imicu', vault: 'Isiphephelo' },
     todayEmptyTitle: 'Usuku lusengenalutho',
     todayEmptyBody: 'Cindezela u-+ ugcine into yokuqala. Isithombe, lapho ukhona, okudlile — noma yini.',
@@ -1383,6 +1461,7 @@ const HI = {
   ui: {
     tagline: 'एक डायरी जो ख़ुद लिखती है',
     onPhone: 'इसी फ़ोन पर', offlineReady: 'बिना इंटरनेट तैयार', offlineWorking: 'ऑफ़लाइन · चल रहा है',
+    netOnline: 'जुड़ा हुआ', netOffline: 'इंटरनेट नहीं · फिर भी चालू', netChecking: 'जाँच रहे हैं…',
     tabs: { today: 'आज', archive: 'संग्रह', threads: 'सूत्र', vault: 'तिजोरी' },
     todayEmptyTitle: 'आज का दिन अभी ख़ाली है',
     todayEmptyBody: 'पहली चीज़ रखने के लिए + दबाइए। एक तस्वीर, आप कहाँ हैं, क्या खाया — कुछ भी।',
@@ -1506,6 +1585,7 @@ const ZH = {
   ui: {
     tagline: '一本会自己写的日记',
     onPhone: '就在这部手机上', offlineReady: '离线可用', offlineWorking: '离线 · 运行中',
+    netOnline: '已连接', netOffline: '无网络 · 仍在运行', netChecking: '检查中…',
     tabs: { today: '今天', archive: '档案', threads: '线索', vault: '保险库' },
     todayEmptyTitle: '今天还是空白',
     todayEmptyBody: '点 + 存下第一件事。一张照片、你在哪里、吃了什么——什么都行。',
@@ -1629,6 +1709,7 @@ const JA = {
   ui: {
     tagline: 'ひとりでに書かれる日記',
     onPhone: 'この端末の中に', offlineReady: 'オフライン対応', offlineWorking: 'オフライン · 稼働中',
+    netOnline: '接続中', netOffline: 'オフライン · そのまま動きます', netChecking: '確認中…',
     tabs: { today: '今日', archive: '記録', threads: '糸', vault: '金庫' },
     todayEmptyTitle: '今日はまだ白紙です',
     todayEmptyBody: '＋を押して、最初のひとつを残しましょう。写真、いまいる場所、食べたもの——何でも。',
@@ -1754,6 +1835,7 @@ const JA = {
  * ================================================================== */
 const EXTRA = {
   'es-ES': { ui: {
+    greeting: { morning: 'Buenos días', afternoon: 'Buenas tardes', evening: 'Buenas noches', night: 'Aún en pie' },
     recovery: 'Resguardo', recoveryTitle: 'Para que nunca lo pierdas',
     recoveryBody: 'Curio no tiene servidor, así que tu diario vive solo aquí — salvo que le des otro sitio donde vivir. Un Kit de Recuperación es todo tu archivo, cerrado con una contraseña que solo tú conoces.',
     passphrase: 'Tu contraseña', passphraseAgain: 'Escríbela otra vez',
@@ -1770,6 +1852,7 @@ const EXTRA = {
     lock: 'Bloquear Curio', reminder: 'Un aviso diario', settings: 'Ajustes',
   } },
   'pt-BR': { ui: {
+    greeting: { morning: 'Bom dia', afternoon: 'Boa tarde', evening: 'Boa noite', night: 'Ainda acordado' },
     recovery: 'Resguardo', recoveryTitle: 'Para você nunca perder isto',
     recoveryBody: 'O Curio não tem servidor, então seu diário vive só aqui — a menos que você dê outro lugar para ele viver. Um Kit de Recuperação é todo o seu arquivo, trancado com uma senha que só você sabe.',
     passphrase: 'Sua senha', passphraseAgain: 'Digite de novo',
@@ -1786,6 +1869,7 @@ const EXTRA = {
     lock: 'Bloquear o Curio', reminder: 'Um lembrete diário', settings: 'Ajustes',
   } },
   'fr-FR': { ui: {
+    greeting: { morning: 'Bonjour', afternoon: 'Bon après-midi', evening: 'Bonsoir', night: 'Encore debout' },
     recovery: 'Sauvegarde', recoveryTitle: 'Pour ne jamais perdre ceci',
     recoveryBody: 'Curio n’a pas de serveur : votre journal ne vit qu’ici — sauf si vous lui donnez un autre endroit où vivre. Un Kit de Récupération, c’est vos archives entières, fermées par une phrase secrète que vous seul connaissez.',
     passphrase: 'Votre phrase secrète', passphraseAgain: 'Retapez-la',
@@ -1802,6 +1886,7 @@ const EXTRA = {
     lock: 'Verrouiller Curio', reminder: 'Un rappel quotidien', settings: 'Réglages',
   } },
   'de-DE': { ui: {
+    greeting: { morning: 'Guten Morgen', afternoon: 'Guten Tag', evening: 'Guten Abend', night: 'Noch wach' },
     recovery: 'Sicherung', recoveryTitle: 'Damit du das nie verlierst',
     recoveryBody: 'Curio hat keinen Server, dein Tagebuch lebt also nur hier — es sei denn, du gibst ihm einen zweiten Ort. Ein Wiederherstellungs-Kit ist dein ganzes Archiv, verschlossen mit einer Passphrase, die nur du kennst.',
     passphrase: 'Deine Passphrase', passphraseAgain: 'Noch einmal eingeben',
@@ -1818,6 +1903,7 @@ const EXTRA = {
     lock: 'Curio sperren', reminder: 'Ein täglicher Anstoß', settings: 'Einstellungen',
   } },
   ar: { ui: {
+    greeting: { morning: 'صباح الخير', afternoon: 'مساء الخير', evening: 'مساء الخير', night: 'ما زلت مستيقظًا' },
     recovery: 'الحفظ', recoveryTitle: 'حتى لا تفقد هذا أبدًا',
     recoveryBody: 'لا خادم لـ Curio، فيومياتك تعيش هنا فقط — إلا إذا منحتها مكانًا آخر. حقيبة الاسترجاع هي أرشيفك كله، مقفلًا بعبارة مرور لا يعرفها سواك.',
     passphrase: 'عبارة المرور', passphraseAgain: 'اكتبها مرة أخرى',
@@ -1834,6 +1920,7 @@ const EXTRA = {
     lock: 'أقفل Curio', reminder: 'تنبيه يومي', settings: 'الإعدادات',
   } },
   sw: { ui: {
+    greeting: { morning: 'Habari za asubuhi', afternoon: 'Habari za mchana', evening: 'Habari za jioni', night: 'Bado macho' },
     recovery: 'Uhifadhi', recoveryTitle: 'Ili usipoteze hii kamwe',
     recoveryBody: 'Curio haina seva, hivyo shajara yako inaishi hapa tu — isipokuwa umpe mahali pengine pa kuishi. Kifurushi cha Kurejesha ni kumbukumbu zako zote, zikiwa zimefungwa kwa neno la siri unalolijua wewe pekee.',
     passphrase: 'Neno lako la siri', passphraseAgain: 'Liandike tena',
@@ -1850,6 +1937,7 @@ const EXTRA = {
     lock: 'Funga Curio', reminder: 'Kumbusho la kila siku', settings: 'Mipangilio',
   } },
   hi: { ui: {
+    greeting: { morning: 'सुप्रभात', afternoon: 'नमस्कार', evening: 'शुभ संध्या', night: 'अब तक जाग रहे हैं' },
     recovery: 'सुरक्षा', recoveryTitle: 'ताकि यह कभी न खोए',
     recoveryBody: 'Curio का कोई सर्वर नहीं, इसलिए आपकी डायरी सिर्फ़ यहीं रहती है — जब तक आप उसे रहने की दूसरी जगह न दें। रिकवरी किट आपका पूरा संग्रह है, एक पासफ़्रेज़ से बंद जिसे सिर्फ़ आप जानते हैं।',
     passphrase: 'आपका पासफ़्रेज़', passphraseAgain: 'एक बार और लिखिए',
@@ -1866,6 +1954,7 @@ const EXTRA = {
     lock: 'Curio लॉक करें', reminder: 'रोज़ की एक याद', settings: 'सेटिंग्स',
   } },
   'zh-Hans': { ui: {
+    greeting: { morning: '早安', afternoon: '午安', evening: '晚上好', night: '还没睡' },
     recovery: '保管', recoveryTitle: '让它永远不会丢',
     recoveryBody: 'Curio 没有服务器，所以你的日记只活在这里——除非你给它另一个安身之处。恢复包就是你的全部档案，用一句只有你知道的口令锁住。',
     passphrase: '你的口令', passphraseAgain: '再输一次',
@@ -1882,6 +1971,7 @@ const EXTRA = {
     lock: '锁定 Curio', reminder: '每日轻推', settings: '设置',
   } },
   ja: { ui: {
+    greeting: { morning: 'おはようございます', afternoon: 'こんにちは', evening: 'こんばんは', night: 'まだ起きていますね' },
     recovery: '保管', recoveryTitle: '二度と失わないために',
     recoveryBody: 'Curio にサーバーはありません。だから日記はここにしかない——別の住まいを与えないかぎりは。リカバリーキットはあなたの記録すべてを、あなただけが知る合言葉で閉じたものです。',
     passphrase: '合言葉', passphraseAgain: 'もう一度入力',
@@ -1898,6 +1988,7 @@ const EXTRA = {
     lock: 'Curio をロック', reminder: '毎日のひと押し', settings: '設定',
   } },
   'en-NG': { ui: {
+    greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', night: 'You still dey up' },
     recovery: 'Safe keeping', recoveryTitle: 'So you no go lose am',
     recoveryBody: 'Curio no get server, so your diary dey only here — unless you give am another place to stay. Recovery Kit na your whole archive, lock with password wey na only you sabi.',
     passphrase: 'Your password', passphraseAgain: 'Type am again',

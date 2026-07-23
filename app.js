@@ -13,6 +13,10 @@ import { renderMoment, renderDay, shareImage } from './share.js';
 import { Recorder, Dictation, canRecord, canDictate, formatDuration, MAX_SECONDS } from './voice.js';
 import * as history from './history.js';
 import * as sizes from './storage.js';
+import * as profile from './profile.js';
+import * as holidays from './holidays.js';
+import * as device from './device.js';
+import { MeetingSession, writeUp, placardFor, fmtClock, digest } from './meeting.js';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -46,10 +50,11 @@ const FACES = { 1: '😔', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
 /** A small, well-mannered haptic. Silent where unsupported. */
 const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch {} };
 
-const state = { tab: 'today', moments: [], vault: null, withheld: {}, query: '',
+const state = { profile: { ...profile.EMPTY_PROFILE }, device: null, tab: 'today', moments: [], vault: null, withheld: {}, query: '',
                 locale: 'en-GB', L: null, settings: {}, pass: null, kit: null };
 let camStream = null, pendingPhoto = null, pendingMood = null, facing = 'environment';
 let recorder = null, pendingAudio = null, dictation = null;
+let meeting = null;
 let reminderTimer = null;
 
 /* ================================================================== */
@@ -59,6 +64,13 @@ async function boot() {
   state.locale = (await store.getMeta('locale', null)) || detectLocale();
   state.L = getLocale(state.locale);
   state.settings = (await store.getMeta('settings', {})) || {};
+  state.profile = { ...profile.EMPTY_PROFILE, ...((await store.getMeta('profile', null)) || {}) };
+  if (!state.profile.country) {
+    const found = profile.detectCountry();
+    if (found.code) { state.profile.country = found.code; state.profile.countryHow = found.how; }
+  }
+  state.device = device.apply();
+  device.watch((d) => { state.device = d; render(); });
   state.pass = state.settings.rememberPass ? await store.getMeta('pass', null) : null;
   applyDirection();
 
@@ -79,6 +91,7 @@ function start() {
   renderTabs(); render(); handleShareTarget(); registerSW(); scheduleReminder();
   runSyncOnOpen();
   publishWidgetSnapshot();
+  offerMeetingRecovery();
 }
 
 /** Pull anything a second device left in the shared folder. */
@@ -106,6 +119,11 @@ function applyDirection() {
   const t = $('tagline'); if (t) t.textContent = state.L.ui.tagline;
 }
 
+async function saveProfile(patch) {
+  state.profile = { ...state.profile, ...patch };
+  await store.setMeta('profile', state.profile);
+}
+
 async function saveSettings(patch) {
   state.settings = { ...state.settings, ...patch };
   await store.setMeta('settings', state.settings);
@@ -128,15 +146,64 @@ function renderTabs() {
   $('tabs').style.display = ''; $('fab').style.display = '';
 }
 
+/* ------------------------------------------------------------------ *
+ * connection state
+ * ------------------------------------------------------------------ *
+ * navigator.onLine only reports whether a network interface exists — a phone
+ * on café wi-fi that never authenticated still reads "online". So Curio asks
+ * the network a real question, with a parameter the service worker is told to
+ * leave alone, otherwise the cache would answer and we would always look
+ * connected. The badge reports what is actually true.
+ * ------------------------------------------------------------------ */
+let netState = null;
+
+async function reachable({ timeout = 4000 } = {}) {
+  if (!navigator.onLine) return false;          // a definite no is trustworthy
+  try {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const t = ctrl ? setTimeout(() => ctrl.abort(), timeout) : null;
+    const res = await fetch(`./manifest.webmanifest?curio-ping=${Date.now()}`, {
+      method: 'GET', cache: 'no-store', signal: ctrl?.signal,
+    });
+    if (t) clearTimeout(t);
+    return res.ok;
+  } catch {
+    return false;                                // no answer means no internet
+  }
+}
+
+function paintNet(on) {
+  const dot = $('dot'), label = $('netlabel');
+  if (!dot || !label) return;
+  const U = state.L.ui;
+  dot.className = 'seal-dot' + (on ? '' : ' off');
+  label.textContent = on ? U.netOnline : U.netOffline;
+  label.parentElement?.setAttribute('title', on ? U.netOnline : U.netOffline);
+}
+
+async function refreshNet() {
+  const on = await reachable();
+  if (on !== netState) { netState = on; paintNet(on); }
+  return on;
+}
+
 function wireChrome() {
   $('fab').onclick = () => { tap(); openCaptureSheet(); };
   $('sheetbg').onclick = closeSheet;
-  const setNet = () => {
-    const on = navigator.onLine;
-    $('dot').className = 'seal-dot' + (on ? '' : ' off');
-    $('netlabel').textContent = on ? state.L.ui.offlineReady : state.L.ui.offlineWorking;
-  };
-  addEventListener('online', setNet); addEventListener('offline', setNet); setNet();
+
+  paintNet(navigator.onLine);                    // paint something immediately
+  refreshNet();                                  // then confirm it for real
+
+  // the browser's own events are the fastest signal; verify each one
+  addEventListener('online', refreshNet);
+  addEventListener('offline', () => { netState = false; paintNet(false); });
+
+  // Re-check whenever the app comes back to the foreground. No polling: a timer
+  // firing every half minute costs battery to tell us something the browser
+  // already announces through its own events.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshNet();
+  });
 
   // Keyboard shortcuts — this is a laptop app too.
   addEventListener('keydown', (e) => {
@@ -234,6 +301,12 @@ function showOnboarding() {
     <div class="rail-label">${esc(U.language)}</div>
     <select class="field select" id="lang">${langs}</select>
 
+    <div class="rail-label" style="margin-top:20px">${esc(U.profile)}</div>
+    <div class="hint" style="margin-bottom:12px">${esc(U.profileBody)}</div>
+    <input class="field" id="obname" placeholder="${esc(U.yourNamePh)}" value="${esc(state.profile.name || '')}">
+    <input class="field" id="obdob" type="date" value="${esc(state.profile.dob || '')}">
+    ${state.profile.country ? `<div class="hint" style="margin:-4px 0 8px">${esc(holidays.countryName(state.profile.country))} · ${esc(U.countryDetected)}</div>` : ''}
+
     <div class="rail-label" style="margin-top:20px">${esc(U.permissionsLabel)}</div>
     ${PERMS.map((p) => `
       <div class="perm-row">
@@ -285,6 +358,9 @@ function showOnboarding() {
     };
   });
   v.querySelector('#done').onclick = async () => {
+    const nm = v.querySelector('#obname')?.value.trim();
+    const db = v.querySelector('#obdob')?.value;
+    if (nm || db) await saveProfile({ name: nm || '', dob: db || '' });
     await store.setMeta('onboarded', true); start();
   };
   const kf = v.querySelector('#kitfile');
@@ -333,6 +409,13 @@ async function doRestore(passphrase) {
     state.locale = (await store.getMeta('locale', state.locale)) || state.locale;
     state.L = getLocale(state.locale);
     state.settings = (await store.getMeta('settings', {})) || {};
+  state.profile = { ...profile.EMPTY_PROFILE, ...((await store.getMeta('profile', null)) || {}) };
+  if (!state.profile.country) {
+    const found = profile.detectCountry();
+    if (found.code) { state.profile.country = found.code; state.profile.countryHow = found.how; }
+  }
+  state.device = device.apply();
+  device.watch((d) => { state.device = d; render(); });
     state.vault = await store.getMeta('vault', state.vault);
     applyDirection();
     await refresh();
@@ -367,6 +450,7 @@ function cardHTML(m) {
     ${m.audio ? `<audio class="cardaudio" controls preload="none" src="${m.audio}"></audio>` : ''}
     <div class="tags"><span class="tag ${m.kind}">${esc(L.ui.kinds[m.kind]?.label || m.kind)}</span></div>
     <div class="expand"><div class="expand-inner">
+      ${m.meeting ? `<div class="meetsum">${meetingSummaryHTML(m.meeting)}</div>` : ''}
       <div class="prov">${esc(m.provenance)}</div>
       <div class="acts">
         <button class="mini-btn" data-act="share">${esc(L.ui.share)}</button>
@@ -375,6 +459,23 @@ function cardHTML(m) {
       </div>
     </div></div>
   </div>`;
+}
+
+/** The meeting write-up, rendered inside its card. */
+function meetingSummaryHTML(mt) {
+  const M = state.L.ui.meeting;
+  const d = mt.digest || {};
+  const block = (title, items, box) => items?.length
+    ? `<div class="msec"><span>${esc(title)}</span><ul>${items.slice(0, 5).map((x) =>
+        `<li>${box ? '□ ' : ''}${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ul></div>` : '';
+  return [
+    mt.attendees ? `<div class="msec"><span>${esc(M.whoPh)}</span><p>${esc(mt.attendees)}</p></div>` : '',
+    block(M.summary, d.summary),
+    block(M.decisions, d.decisions),
+    block(M.actions, d.actions, true),
+    block(M.questions, d.questions),
+    mt.notes?.trim() ? `<div class="msec"><span>${esc(M.notes)}</span><p>${esc(mt.notes.trim())}</p></div>` : '',
+  ].join('');
 }
 
 function wireCards(root) {
@@ -411,9 +512,53 @@ function viewToday() {
   const otd = onThisDay(state.moments);
   const ech = otd.length ? [] : echoes(state.moments);
 
+  const P = state.profile;
+  const bdayMine = profile.nextBirthday(P.dob);
+  const bdaysToday = profile.birthdaysToday(P.people || []);
+  const bdaysSoon = profile.birthdaysUpcoming(P.people || [], new Date(), 14);
+  const holToday = P.country && !state.settings.holidaysOff ? holidays.forDate(P.country) : [];
+  const holNext = P.country && !state.settings.holidaysOff ? holidays.next(P.country) : null;
+  const greetKey = profile.greetingKey();
+  const dayCount = profile.daysAlive(P.dob);
+
   const v = el(`<div class="view">
     <div id="installbar"></div>
     <div id="banner"></div>
+
+    ${profile.hasName(P) || dayCount ? `<div class="hello">
+      <div class="g">${esc(profile.hasName(P)
+        ? fill(U.greetingName, { g: U.greeting[greetKey], name: P.name })
+        : fill(U.greetingPlain, { g: U.greeting[greetKey] }))}</div>
+      ${dayCount ? `<div class="sub">${esc(fill(U.daysAlive, { n: dayCount.toLocaleString(L.code) }))}</div>` : ''}
+    </div>` : ''}
+
+    ${bdayMine?.isToday ? `<div class="birthday">
+      <span class="bk">✦ ${esc(U.birthdays)}</span>
+      <h3>${esc(U.birthdayYours)}</h3>
+      <p>${esc(fill(U.birthdayYoursSub, { n: bdayMine.turning }))}</p>
+    </div>` : ''}
+
+    ${bdaysToday.map((b) => `<div class="birthday">
+      <span class="bk">✦ ${esc(U.birthdays)}</span>
+      <h3>${esc(fill(U.birthdayTheirs, { name: b.name, n: b.turning }))}</h3>
+    </div>`).join('')}
+
+    ${holToday.length ? `<div class="holidaybox">
+      <span class="hk">${esc(holidays.countryName(P.country))}</span>
+      <h4>${esc(fill(U.holidayToday, { name: holToday[0].name }))}</h4>
+      ${holToday[0].approx ? `<p>${esc(U.holidayApprox)}</p>` : ''}
+    </div>`
+    : holNext && holNext.daysAway <= 14 ? `<div class="holidaybox">
+      <span class="hk">${esc(holidays.countryName(P.country))}</span>
+      <h4>${esc(holNext.daysAway === 1
+        ? fill(U.holidayTomorrow, { name: holNext.name })
+        : fill(U.holidayIn, { name: holNext.name, d: holNext.daysAway }))}</h4>
+    </div>` : ''}
+
+    ${bdaysSoon.length && !bdaysToday.length ? `<div class="holidaybox" style="border-left-color:var(--rose)">
+      <span class="hk" style="color:var(--rose)">${esc(U.birthdays)}</span>
+      <h4>${esc(fill(U.birthdaySoon, { name: bdaysSoon[0].name, n: bdaysSoon[0].turning, d: bdaysSoon[0].daysAway }))}</h4>
+    </div>` : ''}
 
     <div class="streakbar">
       <span class="flame">${sk.current > 0 ? '🔥' : '🕯️'}</span>
@@ -653,6 +798,26 @@ function viewVault() {
       <span class="d">${esc(U.historyOnlineBody)}</span></div>
       <div class="toggle ${state.settings.historyOnline ? 'on' : ''}" id="histnet" role="switch"></div></div>
 
+    <div class="rail-label" style="margin-top:24px">${esc(U.profile)}</div>
+    <div class="discard-note">${esc(U.profileBody)}</div>
+    <input class="field" id="pname" placeholder="${esc(U.yourNamePh)}" value="${esc(state.profile.name || '')}">
+    <div class="row" style="border:none;padding:0 0 10px"><div class="rl"><span class="t">${esc(U.yourDob)}</span>
+      <span class="d">${esc(U.yourDobHelp)}</span></div>
+      <input class="field" id="pdob" type="date" style="width:auto;margin:0" value="${esc(state.profile.dob || '')}"></div>
+    <div class="rail-label" style="margin-top:6px">${esc(U.yourCountry)}</div>
+    <select class="field select" id="pcountry">
+      <option value="">${esc(U.countryNone)}</option>
+      ${holidays.COUNTRY_CODES.map((c) =>
+        `<option value="${c}" ${state.profile.country === c ? 'selected' : ''}>${esc(holidays.countryName(c))}</option>`).join('')}
+    </select>
+    ${state.profile.countryHow === 'timezone' ? `<div class="hint" style="margin:-4px 0 14px">${esc(U.countryDetected)}</div>` : ''}
+
+    <div class="rail-label">${esc(U.birthdays)}</div>
+    <div id="peoplelist"></div>
+    <button class="wide-btn" id="addperson">${esc(U.addPerson)}</button>
+    <div class="row"><div class="rl"><span class="t">${esc(U.holidaysOff)}</span></div>
+      <div class="toggle ${state.settings.holidaysOff ? '' : 'on'}" id="holt" role="switch"></div></div>
+
     <div class="rail-label" style="margin-top:24px">${esc(U.language)}</div>
     <select class="field select" id="lang">${langs}</select>
     <div class="hint" style="margin:-4px 0 20px">${esc(U.languageSub)}</div>
@@ -698,6 +863,58 @@ function viewVault() {
 
 function wireVault(v) {
   const L = state.L, U = L.ui;
+
+  // ---- profile ----
+  const pn = v.querySelector('#pname');
+  pn.onchange = async () => { await saveProfile({ name: pn.value.trim() }); toast(U.saved); };
+  const pd = v.querySelector('#pdob');
+  pd.onchange = async () => { await saveProfile({ dob: pd.value }); toast(U.saved); };
+  const pc = v.querySelector('#pcountry');
+  pc.onchange = async () => {
+    await saveProfile({ country: pc.value || null, countryHow: 'chosen' });
+    render(); toast(U.saved);
+  };
+  v.querySelector('#holt').onclick = async (e) => {
+    await saveSettings({ holidaysOff: !state.settings.holidaysOff });
+    e.target.classList.toggle('on', !state.settings.holidaysOff);
+  };
+
+  const renderPeople = () => {
+    const host = v.querySelector('#peoplelist'); if (!host) return;
+    const people = state.profile.people || [];
+    if (!people.length) { host.innerHTML = `<div class="kitinfo">${esc(U.noBirthdays)}</div>`; return; }
+    host.innerHTML = people.map((p) => {
+      const nb = profile.nextBirthday(p.dob);
+      return `<div class="corr">
+        <span class="cl">${esc(p.name)}<span style="opacity:.5;font-size:12px"> · ${nb ? esc(fill(U.ageIs, { n: nb.turning - 1 })) : ''}</span></span>
+        <button class="mini-btn forget" data-rm="${esc(p.id)}" style="flex:0 0 auto;padding:6px 12px">${esc(U.forget)}</button>
+      </div>`;
+    }).join('');
+    host.querySelectorAll('[data-rm]').forEach((b) => b.onclick = async () => {
+      await saveProfile({ people: (state.profile.people || []).filter((x) => String(x.id) !== b.dataset.rm) });
+      renderPeople(); toast(U.personRemoved);
+    });
+  };
+  renderPeople();
+
+  v.querySelector('#addperson').onclick = () => {
+    openSheet(`<h3>${esc(U.addPerson)}</h3>
+      <input class="field" id="bname" placeholder="${esc(U.personName)}">
+      <input class="field" id="bdob" type="date" placeholder="${esc(U.personDob)}">
+      <div class="sheet-actions"><button id="cancel">${esc(U.cancel)}</button>
+      <button class="primary" id="go">${esc(U.save)}</button></div>`);
+    const sh = $('sheet');
+    setTimeout(() => sh.querySelector('#bname')?.focus(), 200);
+    sh.querySelector('#cancel').onclick = closeSheet;
+    sh.querySelector('#go').onclick = async () => {
+      const name = sh.querySelector('#bname').value.trim();
+      const dob = sh.querySelector('#bdob').value;
+      if (!name || !dob) return toast(U.toasts.addSomething, true);
+      const people = [...(state.profile.people || []), { id: `${Date.now()}`, name, dob }];
+      await saveProfile({ people });
+      closeSheet(); renderPeople(); toast(U.personAdded);
+    };
+  };
 
   v.querySelector('#lang').onchange = async (e) => {
     state.locale = e.target.value; state.L = getLocale(state.locale);
@@ -836,6 +1053,221 @@ function wireVault(v) {
       ? fill(U.storageUsing, { used: (used / 1048576).toFixed(1), quota: (quota / 1048576).toFixed(0) })
       : U.storageLocal;
   });
+}
+
+/* ================================================================== */
+/* meetings                                                            */
+/* ================================================================== */
+function openMeetingSetup() {
+  const U = state.L.ui, M = U.meeting;
+  openSheet(`
+    <h3>${esc(M.title)}</h3>
+    <div class="hint">${esc(M.hint)}</div>
+    <input class="field" id="mtitle" placeholder="${esc(M.namePh)}">
+    <input class="field" id="mwho" placeholder="${esc(M.whoPh)}">
+    ${canDictate() ? `<div class="row" style="border:none;padding:6px 0">
+      <div class="rl"><span class="t">${esc(M.enableTranscript)}</span>
+        <span class="d">${esc(M.transcriptWarn)}</span></div>
+      <div class="toggle ${state.settings.meetingTranscript ? 'on' : ''}" id="mdict" role="switch"></div>
+    </div>` : `<div class="hint">${esc(M.transcriptOff)}</div>`}
+    <div class="sheet-actions">
+      <button id="cancel">${esc(U.cancel)}</button>
+      <button class="primary" id="next">${esc(M.start)}</button>
+    </div>`);
+  const sh = $('sheet');
+  setTimeout(() => sh.querySelector('#mtitle')?.focus(), 200);
+  sh.querySelector('#mdict')?.addEventListener('click', async (e) => {
+    await saveSettings({ meetingTranscript: !state.settings.meetingTranscript });
+    e.target.classList.toggle('on', !!state.settings.meetingTranscript);
+  });
+  sh.querySelector('#cancel').onclick = closeSheet;
+  sh.querySelector('#next').onclick = () => askConsent(
+    sh.querySelector('#mtitle').value.trim(),
+    sh.querySelector('#mwho').value.trim());
+}
+
+/** The gate. Curio will not record a room that has not been told. */
+function askConsent(title, who) {
+  const U = state.L.ui, M = U.meeting;
+  openSheet(`
+    <h3>${esc(M.consentTitle)}</h3>
+    <div class="consentbox">
+      <p>${esc(M.consentBody)}</p>
+      <p class="say">${esc(M.consentAsk)}</p>
+    </div>
+    <div class="sheet-actions">
+      <button id="no">${esc(M.consentNo)}</button>
+      <button class="primary" id="yes">${esc(M.consentYes)}</button>
+    </div>`);
+  const sh = $('sheet');
+  sh.querySelector('#no').onclick = () => openMeetingSetup();
+  sh.querySelector('#yes').onclick = () => startMeeting(title, who);
+}
+
+async function startMeeting(title, who) {
+  const U = state.L.ui, M = U.meeting;
+  const aq = sizes.AUDIO_QUALITY[state.settings.audioQuality || sizes.DEFAULT_AUDIO_QUALITY]
+             || sizes.AUDIO_QUALITY.balanced;
+
+  meeting = new MeetingSession({
+    title, attendees: who,
+    bitrate: aq.bitrate,
+    locale: state.L.code,
+    dictate: !!state.settings.meetingTranscript,
+    save: (st) => store.setMeta('meetingDraft', st),
+    onTick: (secs, text) => paintMeeting(secs, text),
+  });
+  meeting.confirmConsent(true, `${title || ''} ${who || ''}`.trim());
+
+  try {
+    await meeting.start();
+  } catch (e) {
+    meeting = null;
+    return toast(e.message === 'NO_CONSENT' ? M.consentTitle : U.voiceDenied, true);
+  }
+  closeSheet();
+  showMeetingScreen();
+  tap(20);
+}
+
+function showMeetingScreen() {
+  const U = state.L.ui, M = U.meeting;
+  $('tabs').style.display = 'none'; $('fab').style.display = 'none';
+  const perHour = sizes.humanBytes((state.settings.audioQuality === 'small' ? 16000 : 24000) * 3600 / 8);
+
+  const scr = el(`<div class="meetscreen" id="meetscreen">
+    <div class="meethead">
+      <div>
+        <div class="mlive"><span class="pip"></span>${esc(M.live)}</div>
+        <h2 id="mname">${esc(meeting.title || M.label)}</h2>
+      </div>
+      <div class="mclock" id="mclock">0:00</div>
+    </div>
+
+    <div class="mtranscript" id="mtx">
+      <span class="tlabel">${esc(state.settings.meetingTranscript ? M.transcriptOn : M.transcriptOff)}</span>
+      <p id="mtxbody">${esc(state.settings.meetingTranscript ? M.transcriptEmpty : '')}</p>
+    </div>
+
+    <textarea class="field mnotes" id="mnotes" placeholder="${esc(M.notesPh)}"></textarea>
+    <div class="mmarks" id="mmarks"></div>
+
+    <div class="mfoot">
+      <button class="wide-btn" id="mmark">${esc(M.markIt)}</button>
+      <div class="mrow">
+        <button class="wide-btn danger" id="mdiscard">${esc(M.discard)}</button>
+        <button class="wide-btn primary" id="mstop">${esc(M.stop)}</button>
+      </div>
+      <div class="hint" style="text-align:center;margin-top:4px">${esc(fill(M.longWarning, { x: perHour }))}</div>
+    </div>
+  </div>`);
+  document.body.appendChild(scr);
+
+  scr.querySelector('#mnotes').oninput = (e) => meeting?.setNotes(e.target.value);
+  scr.querySelector('#mmark').onclick = () => {
+    const m = meeting?.mark('');
+    if (!m) return;
+    tap();
+    paintMarks();
+    toast(fill(M.marked, { t: fmtClock(m.at) }));
+  };
+  scr.querySelector('#mdiscard').onclick = async () => {
+    if (!confirm(M.confirmDiscard)) return;
+    meeting?.cancel(); meeting = null;
+    await store.setMeta('meetingDraft', null);
+    closeMeetingScreen(); toast(M.discarded);
+  };
+  scr.querySelector('#mstop').onclick = () => finishMeeting();
+}
+
+function paintMeeting(secs, text) {
+  const clock = $('mclock'); if (clock) clock.textContent = fmtClock(secs);
+  const body = $('mtxbody');
+  if (body && state.settings.meetingTranscript) {
+    body.textContent = text || state.L.ui.meeting.transcriptEmpty;
+    body.scrollTop = body.scrollHeight;
+  }
+}
+
+function paintMarks() {
+  const host = $('mmarks'); if (!host || !meeting) return;
+  host.innerHTML = meeting.marks.slice(-4).reverse()
+    .map((m) => `<span class="markchip">${esc(fmtClock(m.at))}</span>`).join('');
+}
+
+function closeMeetingScreen() {
+  $('meetscreen')?.remove();
+  renderTabs(); render();
+}
+
+async function finishMeeting() {
+  const U = state.L.ui, M = U.meeting;
+  if (!meeting) return;
+  const notes = $('mnotes')?.value || '';
+  meeting.setNotes(notes);
+  const state_ = await meeting.stop();
+  meeting = null;
+  await store.setMeta('meetingDraft', null);
+  await saveMeetingMoment(state_);
+  closeMeetingScreen();
+  toast(M.saved);
+}
+
+/** Turn a finished meeting into a moment in the diary. */
+async function saveMeetingMoment(st) {
+  const L = state.L;
+  const written = writeUp(st, L);
+  const signal = {
+    kind: 'meeting',
+    label: st.title || L.ui.meeting.label,
+    text: st.title || '',
+    at: st.startedAt || new Date().toISOString(),
+    subject: null,
+  };
+  const moment = compose(signal, state.moments, L);
+  moment.placard = placardFor(st, L);
+  moment.meeting = {
+    attendees: st.attendees || '',
+    consent: st.consent,
+    seconds: st.seconds,
+    marks: st.marks,
+    transcript: st.transcript,
+    notes: st.notes,
+    digest: st.digest || digest(st.transcript || ''),
+    markdown: written.markdown,
+  };
+  if (st.audio) { moment.audio = st.audio; moment.audioSeconds = st.audioSeconds; }
+  moment.editedAt = new Date().toISOString();
+  await store.putMoment(moment);
+  await refresh();
+  state.tab = 'today';
+  publishWidgetSnapshot();
+  if (state.pass) backup.syncNow(state.pass).catch(() => {});
+}
+
+/** A meeting cut short by a flat battery is offered back on the next launch. */
+async function offerMeetingRecovery() {
+  const draft = await store.getMeta('meetingDraft', null);
+  if (!draft || !draft.startedAt) return;
+  const U = state.L.ui, M = U.meeting;
+  openSheet(`
+    <h3>${esc(M.recovered)}</h3>
+    <div class="hint">${esc(M.recoveredBody)}</div>
+    <div class="kitinfo"><b>${esc(draft.title || M.label)}</b><br>
+      ${esc(fmtClock(draft.seconds || 0))}${draft.marks?.length ? ` · ${draft.marks.length}` : ''}</div>
+    <div class="sheet-actions">
+      <button id="drop">${esc(M.recoverDrop)}</button>
+      <button class="primary" id="keep">${esc(M.recoverKeep)}</button>
+    </div>`);
+  const sh = $('sheet');
+  sh.querySelector('#drop').onclick = async () => {
+    await store.setMeta('meetingDraft', null); closeSheet(); toast(M.discarded);
+  };
+  sh.querySelector('#keep').onclick = async () => {
+    await store.setMeta('meetingDraft', null);
+    await saveMeetingMoment({ ...draft, digest: digest(draft.transcript || '') });
+    closeSheet(); render(); toast(M.saved);
+  };
 }
 
 /* ---- storage panel ---- */
@@ -991,7 +1423,10 @@ function openCaptureSheet() {
     <div class="kinds">${kinds.map((k) =>
       `<div class="kind" data-kind="${k.key}">${ICONS[k.key]}<span>${esc(k.label)}</span></div>`).join('')}</div>
     ${kinds.length === 0 ? `<div class="hint" style="margin-top:14px">${esc(U.allSourcesOff)}</div>` : ''}`);
-  $('sheet').querySelectorAll('.kind').forEach((k) => k.onclick = () => captureFor(k.dataset.kind));
+  $('sheet').querySelectorAll('.kind').forEach((k) => k.onclick = () => {
+    if (k.dataset.kind === 'meeting') { closeSheet(); openMeetingSetup(); return; }
+    captureFor(k.dataset.kind);
+  });
 }
 
 function captureFor(kind) {
