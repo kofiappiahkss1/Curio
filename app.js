@@ -24,7 +24,7 @@ import * as book from './book.js';
 import { withLock, LOCK_SYNC, LOCK_WRITE } from './locks.js';
 
 /** Bumped with every release, and shown in the Vault so a stale cache is obvious. */
-export const BUILD = '2026.07.23-13';
+export const BUILD = '2026.07.23-14';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -800,6 +800,25 @@ function viewVault() {
     <div class="seal-big"><div class="seal-emblem">${ICONS.lock}</div>
       <h3>${esc(U.vaultSealTitle)}</h3><p>${esc(U.vaultSealBody)}</p></div>
 
+    <div class="rail-label">${esc(U.theme)}</div>
+    <div class="discard-note">${esc(U.themeBody)}</div>
+    <div class="themegrid" id="themegrid">
+      ${themes.THEMES.map((t) => `
+        <button class="swatch ${(state.settings.theme || 'dusk') === t.id ? 'on' : ''}" data-theme="${t.id}"
+          aria-label="${esc(U.themeNames[t.id] || t.id)}">
+          <span class="chips">
+            <i style="background:${t.swatch[0]}"></i>
+            <i style="background:${t.swatch[1]}"></i>
+            <i style="background:${t.swatch[2]}"></i>
+          </span>
+          <span class="sname">${esc(U.themeNames[t.id] || t.id)}</span>
+        </button>`).join('')}
+      <button class="swatch wide ${state.settings.theme === 'system' ? 'on' : ''}" data-theme="system">
+        <span class="chips"><i class="sysdark"></i><i class="syslight"></i></span>
+        <span class="sname">${esc(U.themeNames.system)}</span>
+      </button>
+    </div>
+
     <div id="recovery-anchor"></div>
     <div class="rail-label">${esc(U.recovery)}</div>
     <div class="day-title" style="font-size:20px;margin-bottom:6px">${esc(U.recoveryTitle)}</div>
@@ -826,25 +845,6 @@ function viewVault() {
     <div class="row"><div class="rl"><span class="t">${esc(U.historyOnline)}</span>
       <span class="d">${esc(U.historyOnlineBody)}</span></div>
       <div class="toggle ${state.settings.historyOnline ? 'on' : ''}" id="histnet" role="switch"></div></div>
-
-    <div class="rail-label">${esc(U.theme)}</div>
-    <div class="discard-note">${esc(U.themeBody)}</div>
-    <div class="themegrid" id="themegrid">
-      ${themes.THEMES.map((t) => `
-        <button class="swatch ${(state.settings.theme || 'dusk') === t.id ? 'on' : ''}" data-theme="${t.id}"
-          aria-label="${esc(U.themeNames[t.id] || t.id)}">
-          <span class="chips">
-            <i style="background:${t.swatch[0]}"></i>
-            <i style="background:${t.swatch[1]}"></i>
-            <i style="background:${t.swatch[2]}"></i>
-          </span>
-          <span class="sname">${esc(U.themeNames[t.id] || t.id)}</span>
-        </button>`).join('')}
-      <button class="swatch wide ${state.settings.theme === 'system' ? 'on' : ''}" data-theme="system">
-        <span class="chips"><i class="sysdark"></i><i class="syslight"></i></span>
-        <span class="sname">${esc(U.themeNames.system)}</span>
-      </button>
-    </div>
 
     <div class="rail-label" style="margin-top:24px">${esc(U.profile)}</div>
     <div class="discard-note">${esc(U.profileBody)}</div>

@@ -22,7 +22,7 @@
  * HTTP cache and to the server, so a new version is genuinely new.
  */
 
-const VERSION = 'v13';
+const VERSION = 'v14';
 const CODE_CACHE = `curio-code-${VERSION}`;
 const ASSET_CACHE = `curio-assets-${VERSION}`;
 
