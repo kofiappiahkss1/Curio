@@ -6,7 +6,7 @@ A private museum of your ordinary days. Installs on any phone or laptop straight
 from the web. No account, no API key, no server. Works fully offline, survives a
 lost phone, and speaks fourteen languages.
 
-**157 tests · 0 failures**
+**196 tests · 0 failures**
 
 ---
 
@@ -85,6 +85,36 @@ go stale: fixed dates, "fourth Thursday of November", everything hung off Easter
 and the Islamic calendar through the browser's own support. Ghana, Nigeria,
 Kenya, South Africa and Tanzania are all in, alongside the usual suspects.
 
+**Real search** — a proper inverted index, written from scratch rather than
+pulled in as a dependency. Ranked, so the best answer is first; prefix-matched,
+so results appear while you type; and forgiving of one typo, so *jollof rise*
+still finds the rice. It reads meeting transcripts and notes too.
+
+**Time capsules** — seal a moment until a date you choose and it genuinely
+leaves the diary: absent from the day, the archive, search and patterns, then
+back on its own when the date arrives. Curio is clear about what this is — the
+archive is on your own device and you hold every key, so a capsule is a promise
+you make to yourself, kept honestly, not protection from an attacker.
+
+**The year as a book** — cover, contents, every day, laid out at A5 with proper
+page breaks and handed to your device to save as a PDF or print. No PDF library:
+jsPDF and its kin are larger than this whole app, and the browser sets type
+better anyway.
+
+**Smaller photos from the start** — WebP encoding on capture where the browser
+supports it, about a third smaller than JPEG with no visible difference, and
+never returning a file larger than the JPEG would have been.
+
+**Safe with two tabs open** — every write and every folder sync takes a lock, so
+two windows can't merge the same archive at once and quietly lose an entry.
+
+**Six themes, plus your device's own preference** — Museum at dusk, Daylight,
+Ink (pure black for OLED), Harbour, Rosewood and Sage. Every colour in the app
+resolves through theme variables, so switching is a light changing rather than a
+page reloading, and the browser's own bars change with it. Text contrast is
+tested at **7:1 or better in every theme** — a real accessibility check, not a
+guess.
+
 **Motion that means something** — views arrive from below, cards deal themselves
 out one after another, the streak flame flickers while it's alive, a birthday
 card catches the light. All of it vanishes under `prefers-reduced-motion`.
@@ -162,6 +192,10 @@ profile.js   name, birthday, offline country detection
 holidays.js  computed public holidays for 34 countries
 device.js    phone / tablet / desktop, by width and pointer
 meeting.js   long recording, live transcript, extraction, autosave
+themes.js    six palettes plus system preference
+search.js    inverted index: ranking, prefix, typo tolerance
+book.js      the year as a printable A5 volume
+locks.js     one writer at a time, across tabs
 history.js   the bundled almanac + widget snapshot
 backup.js    kits, auto-backup to a folder, restore & merge, exports
 share.js     renders placards to shareable images, on-device

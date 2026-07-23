@@ -14,12 +14,102 @@
 <link rel="icon" href="icons/icon-192.png">
 <style>
 /* Fonts are bundled as system fallbacks so the app is beautiful with the radio off. */
-:root{
-  --dusk:#1d1a2b; --dusk-2:#252135; --dusk-3:#2f2a42;
-  --ivory:#f2ebdb; --ink:#2a2118; --ink-soft:#6d6350;
+
+/* ================================================================== *
+ * THEMES
+ * Every colour in the app resolves through these. A theme is a small
+ * block of variables; nothing else in the stylesheet needs to know.
+ * ================================================================== */
+:root, html[data-theme="dusk"]{
+  --surface:#1d1a2b; --surface-2:#252135; --surface-3:#2f2a42;
+  --ivory:#f2ebdb;
+  --card-bg:#f2ebdb; --card-fg:#2a2118; --card-fg-body:#4a4234;
+  --card-fg-soft:#6d6350; --card-line:rgba(42,33,24,.16);
   --brass:#c9a24b; --brass-deep:#a8842f;
   --rose:#b8817e; --sage:#8fa08a; --slate:#7d89a8; --seal:#3a5a45;
   --line:rgba(242,235,219,.14);
+  --glow-a:rgba(201,162,75,.16); --glow-b:rgba(184,129,126,.14);
+  --page-top:#2b2540; --page-mid:#1d1a2b; --page-bot:#16131f;
+}
+
+/* a light room instead of a dark one */
+html[data-theme="daylight"]{
+  --surface:#f3efe4; --surface-2:#ffffff; --surface-3:#eae4d5;
+  --ivory:#2c2419;
+  --card-bg:#ffffff; --card-fg:#241d14; --card-fg-body:#4a4234;
+  --card-fg-soft:#7a7060; --card-line:rgba(42,33,24,.12);
+  --brass:#9a7420; --brass-deep:#7d5d14;
+  --rose:#a8615d; --sage:#5f7a5c; --slate:#4f5f80; --seal:#2f5540;
+  --line:rgba(42,33,24,.14);
+  --glow-a:rgba(154,116,32,.1); --glow-b:rgba(168,97,93,.08);
+  --page-top:#faf7ee; --page-mid:#f3efe4; --page-bot:#e9e3d4;
+}
+
+/* pure black, for OLED and for people who like quiet */
+html[data-theme="ink"]{
+  --surface:#000000; --surface-2:#0d0d0f; --surface-3:#17171a;
+  --ivory:#eceae6;
+  --card-bg:#141416; --card-fg:#eceae6; --card-fg-body:#b8b5ae;
+  --card-fg-soft:#84817a; --card-line:rgba(236,234,230,.12);
+  --brass:#d8d4cc; --brass-deep:#a9a59d;
+  --rose:#c4948f; --sage:#93a48e; --slate:#8b93a6; --seal:#3f5a48;
+  --line:rgba(236,234,230,.11);
+  --glow-a:rgba(216,212,204,.06); --glow-b:rgba(196,148,143,.05);
+  --page-top:#0a0a0c; --page-mid:#000000; --page-bot:#000000;
+}
+
+/* deep water and copper */
+html[data-theme="harbour"]{
+  --surface:#0f2027; --surface-2:#152b33; --surface-3:#1d3942;
+  --ivory:#e8f0ef;
+  --card-bg:#e8f0ef; --card-fg:#12262c; --card-fg-body:#33484e;
+  --card-fg-soft:#5d7178; --card-line:rgba(18,38,44,.15);
+  --brass:#d98b4a; --brass-deep:#b06f36;
+  --rose:#c9807a; --sage:#7fae9c; --slate:#6f95a8; --seal:#2c5a53;
+  --line:rgba(232,240,239,.13);
+  --glow-a:rgba(217,139,74,.15); --glow-b:rgba(127,174,156,.12);
+  --page-top:#16333c; --page-mid:#0f2027; --page-bot:#081419;
+}
+
+/* warm plum and rose gold */
+html[data-theme="rosewood"]{
+  --surface:#241823; --surface-2:#2e1f2d; --surface-3:#3b2939;
+  --ivory:#f4e9e6;
+  --card-bg:#f4e9e6; --card-fg:#2a1a24; --card-fg-body:#4d3742;
+  --card-fg-soft:#7a6069; --card-line:rgba(42,26,36,.15);
+  --brass:#d9a06a; --brass-deep:#b57e4c;
+  --rose:#c98a94; --sage:#94a58c; --slate:#8d84a8; --seal:#4a5741;
+  --line:rgba(244,233,230,.14);
+  --glow-a:rgba(217,160,106,.16); --glow-b:rgba(201,138,148,.15);
+  --page-top:#3a2637; --page-mid:#241823; --page-bot:#180f18;
+}
+
+/* quiet green, for a calmer diary */
+html[data-theme="sage"]{
+  --surface:#1a2320; --surface-2:#222e29; --surface-3:#2d3a34;
+  --ivory:#ecefe7;
+  --card-bg:#f0f2ea; --card-fg:#1d2723; --card-fg-body:#3d4a43;
+  --card-fg-soft:#68756c; --card-line:rgba(29,39,35,.15);
+  --brass:#c2a95f; --brass-deep:#9d8845;
+  --rose:#b98d84; --sage:#8fb08f; --slate:#7c93a0; --seal:#3c6049;
+  --line:rgba(236,239,231,.13);
+  --glow-a:rgba(194,169,95,.14); --glow-b:rgba(143,176,143,.13);
+  --page-top:#26332e; --page-mid:#1a2320; --page-bot:#111815;
+}
+
+/* aliases kept so older rules keep working */
+:root{ --dusk:var(--surface); --dusk-2:var(--surface-2); --dusk-3:var(--surface-3);
+       --ink:var(--card-fg); --ink-soft:var(--card-fg-soft); }
+
+/* switching themes should feel like a light changing, not a page reload */
+html{transition:background-color .45s var(--ease-out)}
+body,.card,.thread,.worldbox,.storbox,.sheet,.tabs,.topbar,.field,.wide-btn,
+.stat,.streakbar,.otd,.holidaybox,.kitinfo,.installbar,.perm-ic{
+  transition:background-color .45s ease, color .35s ease, border-color .45s ease;
+}
+
+:root{
+  /* not themeable: type and the device's safe areas */
   --serif: ui-serif, Georgia, "Times New Roman", serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -28,7 +118,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior-y:none}
 body{
-  background:radial-gradient(120% 80% at 50% -10%, #2b2540 0%, var(--dusk) 55%, #16131f 100%);
+  background:radial-gradient(120% 80% at 50% -10%, var(--page-top) 0%, var(--page-mid) 55%, var(--page-bot) 100%);
   background-attachment:fixed;
   color:var(--ivory); font-family:var(--serif);
   -webkit-font-smoothing:antialiased; overflow:hidden;
@@ -59,13 +149,13 @@ body{
 
 /* ---------- vitrine ---------- */
 .vitrine{position:relative;border-radius:18px;overflow:hidden;margin-bottom:26px;
-  background:linear-gradient(180deg,rgba(29,26,43,0) 40%,rgba(20,18,28,.92) 100%),linear-gradient(135deg,#3a3350,#221e30);
+  background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.55) 100%),linear-gradient(135deg,var(--surface-3),var(--surface-2));
   min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;border:1px solid var(--line)}
 .vitrine.has-photo{background:none}
 .vitrine img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vitrine .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,28,.15) 30%,rgba(20,18,28,.92) 100%)}
 .vitrine::before{content:"";position:absolute;inset:0;
-  background-image:radial-gradient(circle at 30% 30%,rgba(201,162,75,.16),transparent 45%),radial-gradient(circle at 78% 60%,rgba(184,129,126,.14),transparent 40%)}
+  background-image:radial-gradient(circle at 30% 30%,var(--glow-a),transparent 45%),radial-gradient(circle at 78% 60%,var(--glow-b),transparent 40%)}
 .vitrine.has-photo::before{display:none}
 .vitrine .acc{position:relative;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--brass);text-transform:uppercase;margin-bottom:auto}
 .vitrine h2{position:relative;font-weight:500;font-size:23px;line-height:1.16;margin:14px 0 4px}
@@ -76,14 +166,14 @@ body{
 .rail-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* ---------- cards ---------- */
-.card{background:var(--ivory);color:var(--ink);border-radius:13px;padding:15px 16px 14px;margin-bottom:12px;
+.card{background:var(--card-bg);color:var(--card-fg);border-radius:13px;padding:15px 16px 14px;margin-bottom:12px;
   position:relative;cursor:pointer;transition:transform .2s;box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}
 .card:active{transform:scale(.988)}
 .card .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.card .acc{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-soft);text-transform:uppercase}
+.card .acc{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--card-fg-soft);text-transform:uppercase}
 .card .time{font-family:var(--mono);font-size:10px;color:var(--brass-deep);font-weight:700}
 .card h3{font-weight:500;font-size:18px;line-height:1.2;margin-bottom:4px}
-.card .placard{font-size:14px;line-height:1.5;color:#4a4234}
+.card .placard{font-size:14px;line-height:1.5;color:var(--card-fg-body)}
 .card img.thumb{width:100%;border-radius:9px;margin-top:11px;display:block}
 .card .tags{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
 .tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px;color:#fff}
@@ -91,12 +181,12 @@ body{
 .tag.note{background:#9a8f6f} .tag.meal{background:#a8724e} .tag.person{background:#a0776f}
 .card .expand{max-height:0;overflow:hidden;transition:max-height .3s ease}
 .card.open .expand{max-height:200px}
-.card .expand-inner{border-top:1px solid rgba(42,33,24,.14);margin-top:12px;padding-top:12px}
-.card .prov{font-family:var(--mono);font-size:10px;color:var(--ink-soft);line-height:1.6;text-transform:uppercase;letter-spacing:.03em}
+.card .expand-inner{border-top:1px solid var(--card-line);margin-top:12px;padding-top:12px}
+.card .prov{font-family:var(--mono);font-size:10px;color:var(--card-fg-soft);line-height:1.6;text-transform:uppercase;letter-spacing:.03em}
 .card .acts{display:flex;gap:8px;margin-top:12px}
 .mini-btn{flex:1;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
-  padding:10px;border-radius:8px;border:1px solid rgba(42,33,24,.2);color:var(--ink);background:transparent;cursor:pointer}
-.mini-btn.forget{border-color:#8a3b34;color:#8a3b34}
+  padding:10px;border-radius:8px;border:1px solid var(--card-line);color:var(--card-fg);background:transparent;cursor:pointer}
+.mini-btn.forget{border-color:var(--rose);color:var(--rose)}
 
 .withheld{border:1px dashed var(--line);border-radius:13px;padding:15px 16px;margin:6px 0 4px;
   display:flex;gap:12px;align-items:center;background:rgba(58,90,69,.08)}
@@ -194,7 +284,7 @@ textarea.field{min-height:96px;resize:none;line-height:1.45}
 
 /* ---------- toast ---------- */
 .toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(160px + var(--safe-bottom));
-  background:var(--ivory);color:var(--ink);padding:11px 18px;border-radius:22px;font-size:14px;z-index:60;
+  background:var(--card-bg);color:var(--card-fg);padding:11px 18px;border-radius:22px;font-size:14px;z-index:60;
   opacity:0;transition:all .3s;pointer-events:none;max-width:88%;text-align:center;box-shadow:0 12px 30px -8px rgba(0,0,0,.6)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.warn{background:#3a2a28;color:#f4d9d6}
@@ -227,7 +317,7 @@ select.field.select option{background:var(--dusk-2);color:var(--ivory)}
 .camwrap{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;background:#000;aspect-ratio:3/4}
 .camwrap video{width:100%;height:100%;object-fit:cover;display:block}
 .shutter{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;
-  background:rgba(242,235,219,.95);border:4px solid rgba(255,255,255,.45);cursor:pointer;padding:0}
+  background:var(--card-bg);border:4px solid rgba(255,255,255,.45);cursor:pointer;padding:0}
 .shutter:active{transform:translateX(-50%) scale(.93)}
 .camswitch{position:absolute;top:12px;right:12px;background:rgba(20,18,28,.65);border:1px solid var(--line);
   color:var(--ivory);border-radius:20px;padding:7px 12px;font-family:var(--mono);font-size:9px;
@@ -336,7 +426,7 @@ select.field.select option{background:var(--dusk-2);color:var(--ivory)}
 .kitinfo b{color:var(--brass);font-style:normal}
 
 /* ================= LOCK SCREEN ================= */
-.lockscreen{position:fixed;inset:0;z-index:200;background:var(--dusk);
+.lockscreen{position:fixed;inset:0;z-index:200;background:var(--surface);
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 26px;gap:16px}
 .lockscreen .emblem{width:64px;height:64px;border-radius:50%;background:rgba(58,90,69,.28);
   display:grid;place-items:center;box-shadow:0 0 0 7px rgba(58,90,69,.11);margin-bottom:6px}
@@ -633,7 +723,7 @@ html[data-standalone="true"] .topbar{padding-top:calc(var(--safe-top) + 22px)}
   border-top:1px solid rgba(184,129,126,.28)}
 
 .meetscreen{position:fixed;inset:0;z-index:150;background:
-  radial-gradient(110% 70% at 50% 0%,#2b2540,#1b1828 60%,#141220);
+  radial-gradient(110% 70% at 50% 0%,var(--page-top),var(--page-mid) 60%,var(--page-bot));
   display:flex;flex-direction:column;padding:calc(var(--safe-top) + 20px) 20px calc(16px + var(--safe-bottom));
   max-width:560px;margin:0 auto;animation:viewIn .4s var(--ease-out) both}
 @media (min-width:900px){ .meetscreen{max-width:680px;padding-inline:36px} }
@@ -666,10 +756,72 @@ html[data-standalone="true"] .topbar{padding-top:calc(var(--safe-top) + 22px)}
 .meetsum{margin-bottom:12px}
 .msec{margin-bottom:11px}
 .msec span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+  text-transform:uppercase;color:var(--card-fg-soft);margin-bottom:4px}
 .msec ul{margin:0;padding-inline-start:15px}
-.msec li{font-size:13.5px;line-height:1.5;color:#4a4234;margin-bottom:3px}
-.msec p{font-size:13.5px;line-height:1.5;color:#4a4234}
+.msec li{font-size:13.5px;line-height:1.5;color:var(--card-fg-body);margin-bottom:3px}
+.msec p{font-size:13.5px;line-height:1.5;color:var(--card-fg-body)}
+
+
+/* ================= THEME PICKER ================= */
+.themegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px}
+@media (min-width:700px){ .themegrid{grid-template-columns:repeat(3,1fr)} }
+.swatch{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+  padding:12px 12px 11px;cursor:pointer;text-align:start;transition:all .22s var(--ease-out);
+  display:flex;flex-direction:column;gap:9px}
+.swatch.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:12px}
+.swatch:active{transform:scale(.97)}
+.swatch.on{border-color:var(--brass);background:color-mix(in srgb,var(--brass) 12%,var(--surface-2))}
+html.is-hover .swatch:hover{border-color:color-mix(in srgb,var(--brass) 45%,transparent)}
+.swatch .chips{display:flex;gap:5px}
+.swatch .chips i{width:22px;height:22px;border-radius:7px;display:block;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
+.swatch .sname{font-family:var(--serif);font-size:13.5px;color:var(--ivory);line-height:1.25}
+.swatch.on .sname{color:var(--brass)}
+/* These two are deliberately literal: the "follow my device" swatch previews
+   both palettes at once, so it cannot use the palette that is currently on. */
+.chips i.sysdark{background:linear-gradient(135deg,#1d1a2b 50%,#c9a24b 50%)}
+.chips i.syslight{background:linear-gradient(135deg,#f3efe4 50%,#9a7420 50%)}
+
+/* the whole app cross-fades when the room changes */
+@keyframes themeWash{from{opacity:.55}to{opacity:1}}
+html[data-theme] body{animation:themeWash .5s ease}
+
+
+/* ================= SEARCH SUGGESTIONS ================= */
+.tips{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:-8px 0 16px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(242,235,219,.4)}
+.tip{background:var(--surface-3);border:1px solid var(--line);color:var(--brass);
+  border-radius:16px;padding:5px 11px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.06em;cursor:pointer}
+mark{background:color-mix(in srgb,var(--brass) 34%,transparent);color:inherit;
+  border-radius:3px;padding:0 2px}
+
+/* ================= TIME CAPSULE ================= */
+details.capsule{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px;
+  background:var(--surface-2)}
+details.capsule summary{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--slate);cursor:pointer;list-style:none}
+details.capsule summary::-webkit-details-marker{display:none}
+details.capsule summary::before{content:"\271A";margin-inline-end:8px;color:var(--slate)}
+details.capsule[open] summary::before{content:"\2212"}
+details.capsule[open]{border-color:color-mix(in srgb,var(--slate) 45%,transparent)}
+
+
+/* ================= UPDATE BAR ================= */
+.updatebar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + var(--safe-bottom));
+  z-index:120;display:flex;align-items:center;gap:12px;max-width:min(430px,92vw);
+  background:var(--surface-2);border:1px solid var(--brass);border-radius:15px;
+  padding:13px 14px;box-shadow:0 16px 40px -14px rgba(0,0,0,.7);
+  animation:dealIn .45s var(--ease-spring) both}
+@media (min-width:900px){ .updatebar{bottom:34px;left:auto;right:34px;transform:none} }
+.updatebar .ub-tx{flex:1;min-width:0}
+.updatebar .ub-tx b{display:block;font-family:var(--serif);font-size:15px;font-weight:500;margin-bottom:2px}
+.updatebar .ub-tx span{font-size:12.5px;line-height:1.4;color:rgba(242,235,219,.65)}
+.ub-go{flex-shrink:0;background:var(--brass);border:none;color:#231d10;border-radius:20px;
+  padding:10px 16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;font-weight:700;cursor:pointer}
+.buildstamp{font-family:var(--mono);font-size:14px;letter-spacing:.08em;color:var(--brass)}
 
 /* ---------- RTL adjustments ---------- */
 [dir=rtl] .tl{padding-left:0;padding-right:26px}

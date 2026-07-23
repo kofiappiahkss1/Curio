@@ -134,6 +134,58 @@ const EN_GB = {
     exportMarkdown: 'Export as readable text',
     dangerZone: 'Careful',
 
+    // ---- updates ----
+    updateReady: 'A new version is ready',
+    updateBody: 'Tap to load it. Nothing in your diary is affected.',
+    updateNow: 'Reload',
+    version: 'Version', versionBody: 'If this number does not change after you publish, the old copy is still cached \u2014 use “Check for updates”.',
+    checkUpdates: 'Check for updates', checking: 'Checking\u2026',
+    upToDate: 'You are on the latest version.',
+    updateFound: 'A new version was found. Reloading\u2026',
+
+    // ---- search ----
+    searchSuggest: 'Try', searchNone: 'Nothing matches that.',
+    searchHint: 'Partial words and small typos are fine.',
+
+    // ---- time capsules ----
+    capsule: 'Seal until later', capsuleTitle: 'A capsule',
+    capsuleBody: 'This will be hidden from your diary until the date you choose \u2014 then it comes back on its own. It stays on this phone the whole time, and an export always contains it.',
+    capsuleOptions: { month6: 'In six months', year1: 'In a year', year5: 'In five years', year10: 'In ten years' },
+    capsuleCustom: 'Choose a date', capsuleNone: 'Do not seal',
+    capsuleSealed: 'Sealed until {d}.',
+    capsuleWaiting: { one: '{n} capsule waiting', other: '{n} capsules waiting' },
+    capsuleNext: 'The next opens in {d} days.',
+    capsuleOpened: 'A capsule has opened.',
+    capsuleOpenedBody: 'You sealed this on {d}. Here it is again.',
+
+    // ---- the annual book ----
+    book: 'The year as a book',
+    bookBody: 'Lays a whole year out as a printed volume \u2014 cover, contents, every day \u2014 and hands it to your device to save as a PDF or print. Made here, sent nowhere.',
+    bookMake: 'Make the book for {y}', bookYear: 'Year',
+    bookNone: 'Nothing kept yet this year.',
+    bookOpened: 'Your book is ready to print or save.',
+    bookDownloaded: 'Your book was saved as a file \u2014 open it and print to PDF.',
+    bookLabels: {
+      title: 'Curio', of: 'The year of', contents: 'Contents',
+      kept: 'moments kept', days: 'days written', photos: 'photographs',
+      colophon: 'Made by Curio on this device. No copy of this was sent anywhere.',
+      empty: 'Nothing was kept this year.',
+    },
+
+    // ---- webp ----
+    webpOn: 'Smaller photos', webpBody: 'Saves new pictures in a newer format \u2014 about a third smaller, with no visible difference.',
+    webpUnsupported: 'This browser cannot write the smaller format. Photos are saved as JPEG.',
+
+    // ---- themes ----
+    theme: 'Theme', themeBody: 'Six rooms to keep the same diary in.',
+    themeNames: {
+      dusk: 'Museum at dusk', daylight: 'Daylight', ink: 'Ink',
+      harbour: 'Harbour', rosewood: 'Rosewood', sage: 'Sage',
+      system: 'Follow my device',
+    },
+    themeSystemBody: 'Light by day, dark by night \u2014 whatever your phone is doing.',
+    themeSet: 'Theme set to {x}.',
+
     // ---- meetings ----
     meeting: {
       label: 'Meeting', detail: 'A conference or a call',
@@ -1835,6 +1887,7 @@ const JA = {
  * ================================================================== */
 const EXTRA = {
   'es-ES': { ui: {
+    theme: 'Tema', themeBody: 'Seis salas para el mismo diario.',
     greeting: { morning: 'Buenos días', afternoon: 'Buenas tardes', evening: 'Buenas noches', night: 'Aún en pie' },
     recovery: 'Resguardo', recoveryTitle: 'Para que nunca lo pierdas',
     recoveryBody: 'Curio no tiene servidor, así que tu diario vive solo aquí — salvo que le des otro sitio donde vivir. Un Kit de Recuperación es todo tu archivo, cerrado con una contraseña que solo tú conoces.',
@@ -1852,6 +1905,7 @@ const EXTRA = {
     lock: 'Bloquear Curio', reminder: 'Un aviso diario', settings: 'Ajustes',
   } },
   'pt-BR': { ui: {
+    theme: 'Tema', themeBody: 'Seis salas para o mesmo diário.',
     greeting: { morning: 'Bom dia', afternoon: 'Boa tarde', evening: 'Boa noite', night: 'Ainda acordado' },
     recovery: 'Resguardo', recoveryTitle: 'Para você nunca perder isto',
     recoveryBody: 'O Curio não tem servidor, então seu diário vive só aqui — a menos que você dê outro lugar para ele viver. Um Kit de Recuperação é todo o seu arquivo, trancado com uma senha que só você sabe.',
@@ -1869,6 +1923,7 @@ const EXTRA = {
     lock: 'Bloquear o Curio', reminder: 'Um lembrete diário', settings: 'Ajustes',
   } },
   'fr-FR': { ui: {
+    theme: 'Thème', themeBody: 'Six salles pour le même journal.',
     greeting: { morning: 'Bonjour', afternoon: 'Bon après-midi', evening: 'Bonsoir', night: 'Encore debout' },
     recovery: 'Sauvegarde', recoveryTitle: 'Pour ne jamais perdre ceci',
     recoveryBody: 'Curio n’a pas de serveur : votre journal ne vit qu’ici — sauf si vous lui donnez un autre endroit où vivre. Un Kit de Récupération, c’est vos archives entières, fermées par une phrase secrète que vous seul connaissez.',
@@ -1886,6 +1941,7 @@ const EXTRA = {
     lock: 'Verrouiller Curio', reminder: 'Un rappel quotidien', settings: 'Réglages',
   } },
   'de-DE': { ui: {
+    theme: 'Erscheinungsbild', themeBody: 'Sechs Räume für dasselbe Tagebuch.',
     greeting: { morning: 'Guten Morgen', afternoon: 'Guten Tag', evening: 'Guten Abend', night: 'Noch wach' },
     recovery: 'Sicherung', recoveryTitle: 'Damit du das nie verlierst',
     recoveryBody: 'Curio hat keinen Server, dein Tagebuch lebt also nur hier — es sei denn, du gibst ihm einen zweiten Ort. Ein Wiederherstellungs-Kit ist dein ganzes Archiv, verschlossen mit einer Passphrase, die nur du kennst.',
@@ -1903,6 +1959,7 @@ const EXTRA = {
     lock: 'Curio sperren', reminder: 'Ein täglicher Anstoß', settings: 'Einstellungen',
   } },
   ar: { ui: {
+    theme: 'المظهر', themeBody: 'ستّ غرف ليومياتك نفسها.',
     greeting: { morning: 'صباح الخير', afternoon: 'مساء الخير', evening: 'مساء الخير', night: 'ما زلت مستيقظًا' },
     recovery: 'الحفظ', recoveryTitle: 'حتى لا تفقد هذا أبدًا',
     recoveryBody: 'لا خادم لـ Curio، فيومياتك تعيش هنا فقط — إلا إذا منحتها مكانًا آخر. حقيبة الاسترجاع هي أرشيفك كله، مقفلًا بعبارة مرور لا يعرفها سواك.',
@@ -1920,6 +1977,7 @@ const EXTRA = {
     lock: 'أقفل Curio', reminder: 'تنبيه يومي', settings: 'الإعدادات',
   } },
   sw: { ui: {
+    theme: 'Mandhari', themeBody: 'Vyumba sita kwa shajara ile ile.',
     greeting: { morning: 'Habari za asubuhi', afternoon: 'Habari za mchana', evening: 'Habari za jioni', night: 'Bado macho' },
     recovery: 'Uhifadhi', recoveryTitle: 'Ili usipoteze hii kamwe',
     recoveryBody: 'Curio haina seva, hivyo shajara yako inaishi hapa tu — isipokuwa umpe mahali pengine pa kuishi. Kifurushi cha Kurejesha ni kumbukumbu zako zote, zikiwa zimefungwa kwa neno la siri unalolijua wewe pekee.',
@@ -1937,6 +1995,7 @@ const EXTRA = {
     lock: 'Funga Curio', reminder: 'Kumbusho la kila siku', settings: 'Mipangilio',
   } },
   hi: { ui: {
+    theme: 'थीम', themeBody: 'एक ही डायरी के लिए छह कमरे।',
     greeting: { morning: 'सुप्रभात', afternoon: 'नमस्कार', evening: 'शुभ संध्या', night: 'अब तक जाग रहे हैं' },
     recovery: 'सुरक्षा', recoveryTitle: 'ताकि यह कभी न खोए',
     recoveryBody: 'Curio का कोई सर्वर नहीं, इसलिए आपकी डायरी सिर्फ़ यहीं रहती है — जब तक आप उसे रहने की दूसरी जगह न दें। रिकवरी किट आपका पूरा संग्रह है, एक पासफ़्रेज़ से बंद जिसे सिर्फ़ आप जानते हैं।',
@@ -1971,6 +2030,7 @@ const EXTRA = {
     lock: '锁定 Curio', reminder: '每日轻推', settings: '设置',
   } },
   ja: { ui: {
+    theme: 'テーマ', themeBody: '同じ日記を置く、六つの部屋。',
     greeting: { morning: 'おはようございます', afternoon: 'こんにちは', evening: 'こんばんは', night: 'まだ起きていますね' },
     recovery: '保管', recoveryTitle: '二度と失わないために',
     recoveryBody: 'Curio にサーバーはありません。だから日記はここにしかない——別の住まいを与えないかぎりは。リカバリーキットはあなたの記録すべてを、あなただけが知る合言葉で閉じたものです。',
@@ -1988,6 +2048,7 @@ const EXTRA = {
     lock: 'Curio をロック', reminder: '毎日のひと押し', settings: '設定',
   } },
   'en-NG': { ui: {
+    theme: 'Theme', themeBody: 'Six different look for the same diary.',
     greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', night: 'You still dey up' },
     recovery: 'Safe keeping', recoveryTitle: 'So you no go lose am',
     recoveryBody: 'Curio no get server, so your diary dey only here — unless you give am another place to stay. Recovery Kit na your whole archive, lock with password wey na only you sabi.',

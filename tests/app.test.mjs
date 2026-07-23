@@ -51,7 +51,17 @@ Object.defineProperty(window.navigator, 'storage', {
   configurable: true,
 });
 
-const settle = () => new Promise((r) => setTimeout(r, 40));
+// Wait for the app to actually be ready rather than guessing at a delay —
+// under parallel test runs a fixed timeout is a coin toss.
+const tick = (ms = 15) => new Promise((r) => setTimeout(r, ms));
+const settle = async (times = 6) => { for (let i = 0; i < times; i++) await tick(); };
+const waitFor = async (fn, tries = 80) => {
+  for (let i = 0; i < tries; i++) {
+    try { if (fn()) return true; } catch { /* not ready yet */ }
+    await tick(20);
+  }
+  return false;
+};
 
 await import('../app.js');
 await settle();
@@ -61,17 +71,18 @@ const text = () => window.document.getElementById('body').textContent;
 
 async function capture(kind, value) {
   $('fab').click();                                    // open capture sheet
-  await settle();
+  await waitFor(() => $('sheet').querySelector(`.kind[data-kind="${kind}"]`));
   const tile = $('sheet').querySelector(`.kind[data-kind="${kind}"]`);
   assert.ok(tile, `capture tile for "${kind}" should exist`);
   tile.click();
-  await settle();
+  await waitFor(() => $('sheet').querySelector('#val'));
   $('sheet').querySelector('#val').value = value;
   $('sheet').querySelector('#save').click();
   await settle();
 }
 
-test('first run shows the permissions screen with a language picker', () => {
+test('first run shows the permissions screen with a language picker', async () => {
+  await waitFor(() => $('lang'));
   assert.ok($('lang'), 'a language selector should be offered');
   assert.ok($('lang').options.length >= 10, 'many languages should be listed');
   assert.ok($('body').querySelectorAll('[data-req]').length >= 3, 'permissions should be requestable');
@@ -85,8 +96,9 @@ test('a permission button actually requests and reports its result', async () =>
 });
 
 test('finishing onboarding reveals the app', async () => {
+  await waitFor(() => $('done'));
   $('done').click();
-  await settle();
+  await waitFor(() => $('tabs').querySelectorAll('.tab').length === 4);
   assert.equal($('tabs').querySelectorAll('.tab').length, 4);
   assert.match(window.document.body.textContent, /Curio/);
 });

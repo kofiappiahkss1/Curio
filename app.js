@@ -3,7 +3,8 @@
  * Everything runs locally. The only network use is the one-time download of
  * these files; afterwards it works with the radio off.
  */
-import { compose, composeDay, weave, search, guard, dayKey, renumber, sources, SEALED,
+import { compose, composeDay, weave, guard, dayKey, renumber, sources, SEALED,
+         isLocked, visibleMoments, lockedMoments, nextCapsule, newlyOpened, capsuleOptions,
          onThisDay, echoes, streaks, yearGrid, stats, moodCorrelations, moodAverage } from './core.js';
 import { LOCALES, getLocale, detectLocale, fill, plural } from './i18n.js';
 import * as store from './store.js';
@@ -17,6 +18,13 @@ import * as profile from './profile.js';
 import * as holidays from './holidays.js';
 import * as device from './device.js';
 import { MeetingSession, writeUp, placardFor, fmtClock, digest } from './meeting.js';
+import * as themes from './themes.js';
+import { SearchIndex, highlight } from './search.js';
+import * as book from './book.js';
+import { withLock, LOCK_SYNC, LOCK_WRITE } from './locks.js';
+
+/** Bumped with every release, and shown in the Vault so a stale cache is obvious. */
+export const BUILD = '2026.07.23-12';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -53,7 +61,7 @@ const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch {} };
 const state = { profile: { ...profile.EMPTY_PROFILE }, device: null, tab: 'today', moments: [], vault: null, withheld: {}, query: '',
                 locale: 'en-GB', L: null, settings: {}, pass: null, kit: null };
 let camStream = null, pendingPhoto = null, pendingMood = null, facing = 'environment';
-let recorder = null, pendingAudio = null, dictation = null;
+let recorder = null, pendingAudio = null, dictation = null, pendingUnlock = null;
 let meeting = null;
 let reminderTimer = null;
 
@@ -64,6 +72,8 @@ async function boot() {
   state.locale = (await store.getMeta('locale', null)) || detectLocale();
   state.L = getLocale(state.locale);
   state.settings = (await store.getMeta('settings', {})) || {};
+  themes.apply(state.settings.theme || themes.DEFAULT_THEME);
+  themes.watchSystem(state.settings.theme, () => themes.apply(themes.SYSTEM));
   state.profile = { ...profile.EMPTY_PROFILE, ...((await store.getMeta('profile', null)) || {}) };
   if (!state.profile.country) {
     const found = profile.detectCountry();
@@ -98,7 +108,7 @@ function start() {
 async function runSyncOnOpen() {
   if (!state.pass) return;
   try {
-    const res = await backup.syncNow(state.pass);
+    const res = await withLock(LOCK_SYNC, () => backup.syncNow(state.pass));
     if (res.status === 'ok' && res.pulled > 0) {
       await refresh(); render();
       toast(fill(state.L.ui.syncPulled, { n: res.pulled }));
@@ -108,9 +118,16 @@ async function runSyncOnOpen() {
   } catch { /* sync is a convenience, never a blocker */ }
 }
 
+let searchIndex = null;
+
 async function refresh() {
-  state.moments = renumber(await store.allMoments());
+  const all = renumber(await store.allMoments());
+  // Capsules are simply not part of the archive until their date arrives —
+  // not filtered at the edges, but genuinely absent from feed, search and patterns.
+  state.all = all;
+  state.moments = visibleMoments(all);
   state.withheld = (await store.getMeta('withheld', {})) || {};
+  searchIndex = SearchIndex.build(state.moments);
 }
 
 function applyDirection() {
@@ -409,6 +426,8 @@ async function doRestore(passphrase) {
     state.locale = (await store.getMeta('locale', state.locale)) || state.locale;
     state.L = getLocale(state.locale);
     state.settings = (await store.getMeta('settings', {})) || {};
+  themes.apply(state.settings.theme || themes.DEFAULT_THEME);
+  themes.watchSystem(state.settings.theme, () => themes.apply(themes.SYSTEM));
   state.profile = { ...profile.EMPTY_PROFILE, ...((await store.getMeta('profile', null)) || {}) };
   if (!state.profile.country) {
     const found = profile.detectCountry();
@@ -586,6 +605,7 @@ function viewToday() {
       </div>`).join('')}
     </div>` : ''}
 
+    <div id="capsules"></div>
     <div id="worldhistory"></div>
 
     <div class="eyebrow">${new Date().toLocaleDateString(L.code, { weekday: 'long', day: 'numeric', month: 'long' })}${day.place ? ' · ' + esc(day.place) : ''}</div>
@@ -609,6 +629,7 @@ function viewToday() {
   wireCards(v);
   renderBanner(v.querySelector('#banner'));
   renderWorldHistory(v.querySelector('#worldhistory'));
+  renderCapsules(v.querySelector('#capsules'));
   v.querySelector('#shareday')?.addEventListener('click', shareToday);
   maybeShowInstall();
   return v;
@@ -641,7 +662,10 @@ async function renderBanner(host) {
 function viewArchive() {
   const L = state.L, U = L.ui;
   const q = state.query;
-  const hits = q ? search(state.moments, q) : null;
+  const hits = q && searchIndex
+    ? searchIndex.search(q).map((h) => state.moments.find((m) => m.id === h.id)).filter(Boolean)
+    : null;
+  const tips = q && searchIndex ? searchIndex.suggest(q) : [];
   const days = [...new Set(state.moments.filter((m) => m.kept !== false).map((m) => m.day))].sort().reverse();
   const year = new Date().getFullYear();
   const grid = yearGrid(state.moments, year);
@@ -652,6 +676,8 @@ function viewArchive() {
     <div class="day-title">${esc(U.archiveTitle)}</div>
     <div class="day-sub">${esc(U.archiveSub)}</div>
     <input class="search" id="q" placeholder="${esc(U.searchPlaceholder)}" value="${esc(q)}">
+    ${q && tips.length ? `<div class="tips">${esc(U.searchSuggest)}: ${tips.map((t) =>
+      `<button class="tip" data-tip="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
     ${!q && days.length ? `
       <div class="rail-label">${esc(U.yearInPixels)} · ${year}</div>
       <div class="year">${grid.map((g) => {
@@ -686,6 +712,9 @@ function viewArchive() {
     results.querySelectorAll('.tl-item').forEach((it) => { it.onclick = () => showDay(it.dataset.day); });
   }
 
+  v.querySelectorAll('[data-tip]').forEach((b) => b.onclick = () => {
+    state.query = b.dataset.tip; render();
+  });
   const input = v.querySelector('#q');
   input.oninput = (e) => {
     state.query = e.target.value;
@@ -798,6 +827,25 @@ function viewVault() {
       <span class="d">${esc(U.historyOnlineBody)}</span></div>
       <div class="toggle ${state.settings.historyOnline ? 'on' : ''}" id="histnet" role="switch"></div></div>
 
+    <div class="rail-label">${esc(U.theme)}</div>
+    <div class="discard-note">${esc(U.themeBody)}</div>
+    <div class="themegrid" id="themegrid">
+      ${themes.THEMES.map((t) => `
+        <button class="swatch ${(state.settings.theme || 'dusk') === t.id ? 'on' : ''}" data-theme="${t.id}"
+          aria-label="${esc(U.themeNames[t.id] || t.id)}">
+          <span class="chips">
+            <i style="background:${t.swatch[0]}"></i>
+            <i style="background:${t.swatch[1]}"></i>
+            <i style="background:${t.swatch[2]}"></i>
+          </span>
+          <span class="sname">${esc(U.themeNames[t.id] || t.id)}</span>
+        </button>`).join('')}
+      <button class="swatch wide ${state.settings.theme === 'system' ? 'on' : ''}" data-theme="system">
+        <span class="chips"><i class="sysdark"></i><i class="syslight"></i></span>
+        <span class="sname">${esc(U.themeNames.system)}</span>
+      </button>
+    </div>
+
     <div class="rail-label" style="margin-top:24px">${esc(U.profile)}</div>
     <div class="discard-note">${esc(U.profileBody)}</div>
     <input class="field" id="pname" placeholder="${esc(U.yourNamePh)}" value="${esc(state.profile.name || '')}">
@@ -849,12 +897,27 @@ function viewVault() {
     <div class="pill-row" id="aq">${['small', 'balanced', 'clear'].map((t) =>
       `<button class="pill ${(state.settings.audioQuality || 'balanced') === t ? 'on' : ''}" data-aq="${t}">${esc(U.qualityTiers[t])}</button>`).join('')}</div>
 
+    <div class="rail-label" style="margin-top:24px">${esc(U.book)}</div>
+    <div class="discard-note">${esc(U.bookBody)}</div>
+    <div class="pill-row" id="bookyears">
+      ${(book.yearsWithContent(state.moments).length
+          ? book.yearsWithContent(state.moments)
+          : [new Date().getFullYear()]).slice(0, 6).map((y, i) =>
+        `<button class="pill ${i === 0 ? 'on' : ''}" data-year="${y}">${y}</button>`).join('')}
+    </div>
+    <button class="wide-btn primary" id="makebook">${esc(fill(U.bookMake, {
+      y: book.yearsWithContent(state.moments)[0] || new Date().getFullYear() }))}</button>
+
     <div class="rail-label" style="margin-top:22px">${esc(U.yourArchive)}</div>
     <button class="wide-btn" id="expmd">${esc(U.exportMarkdown)}</button>
     <button class="wide-btn" id="expplain">${esc(U.exportPlain)}</button>
     <div class="rail-label" style="margin-top:22px">${esc(U.dangerZone)}</div>
     <button class="wide-btn danger" id="wipe">${esc(U.wipeBtn)}</button>
     <div class="discard-note" style="margin-top:14px"><b>${esc(U.aboutTitle)}</b> ${esc(U.aboutBody)}</div>
+
+    <div class="rail-label" style="margin-top:24px">${esc(U.version)}</div>
+    <div class="kitinfo"><b class="buildstamp">${esc(BUILD)}</b><br>${esc(U.versionBody)}</div>
+    <button class="wide-btn" id="checkupd">${esc(U.checkUpdates)}</button>
   </div>`);
 
   wireVault(v);
@@ -863,6 +926,17 @@ function viewVault() {
 
 function wireVault(v) {
   const L = state.L, U = L.ui;
+
+  // ---- theme ----
+  v.querySelectorAll('[data-theme]').forEach((b) => b.onclick = async () => {
+    const id = b.dataset.theme;
+    await saveSettings({ theme: id });
+    themes.apply(id);
+    themes.watchSystem(id, () => themes.apply(themes.SYSTEM));
+    v.querySelectorAll('[data-theme]').forEach((x) => x.classList.toggle('on', x === b));
+    tap();
+    toast(fill(U.themeSet, { x: U.themeNames[id] || id }));
+  });
 
   // ---- profile ----
   const pn = v.querySelector('#pname');
@@ -1033,6 +1107,28 @@ function wireVault(v) {
   };
 
   // ---- exports ----
+  // ---- the annual book ----
+  let bookYear = book.yearsWithContent(state.moments)[0] || new Date().getFullYear();
+  v.querySelectorAll('[data-year]').forEach((b) => b.onclick = () => {
+    bookYear = Number(b.dataset.year);
+    v.querySelectorAll('[data-year]').forEach((x) => x.classList.toggle('on', x === b));
+    v.querySelector('#makebook').textContent = fill(U.bookMake, { y: bookYear });
+  });
+  v.querySelector('#makebook').onclick = () => {
+    const vol = book.organise(state.moments, bookYear, { composeDay, locale: state.L.code });
+    if (!vol.moments) return toast(U.bookNone, true);
+    const html = book.render(vol, {
+      locale: state.L.code,
+      name: state.profile.name || '',
+      stats: sizes.measure(state.moments).counts,
+      labels: U.bookLabels,
+    });
+    const how = book.open(html, `curio-${bookYear}.html`);
+    toast(how === 'printed' ? U.bookOpened : U.bookDownloaded);
+  };
+
+  v.querySelector('#checkupd').onclick = () => checkForUpdates();
+
   v.querySelector('#expmd').onclick = async () => {
     const n = await backup.markdownExport(composeDay, state.L);
     toast(fill(U.imported, { n }) || U.saved);
@@ -1242,7 +1338,7 @@ async function saveMeetingMoment(st) {
   await refresh();
   state.tab = 'today';
   publishWidgetSnapshot();
-  if (state.pass) backup.syncNow(state.pass).catch(() => {});
+  if (state.pass) withLock(LOCK_SYNC, () => backup.syncNow(state.pass)).catch(() => {});
 }
 
 /** A meeting cut short by a flat battery is offered back on the next launch. */
@@ -1346,7 +1442,7 @@ async function runReclaim(what, host) {
   await refresh();
   render();
   toast(res.saved > 0 ? fill(U.storReclaimed, { x: sizes.humanBytes(res.saved) }) : U.storNothingToDo);
-  if (state.pass) backup.syncNow(state.pass).catch(() => {});
+  if (state.pass) withLock(LOCK_SYNC, () => backup.syncNow(state.pass)).catch(() => {});
 }
 
 /* ---- passphrase dialog ---- */
@@ -1431,7 +1527,7 @@ function openCaptureSheet() {
 
 function captureFor(kind) {
   const L = state.L, U = L.ui, K = U.kinds[kind];
-  pendingPhoto = null; pendingMood = null;
+  pendingPhoto = null; pendingMood = null; pendingUnlock = null;
   openSheet(`
     <h3>${esc(K.title)}</h3><div class="hint">${esc(K.hint)}</div>
     ${kind === 'photo' ? `
@@ -1458,6 +1554,17 @@ function captureFor(kind) {
       ${canDictate() ? `<button class="wide-btn" id="dictate">${esc(U.dictate)}</button>` : ''}
       <div class="hint" style="margin:-4px 0 12px">${esc(U.dictateTip)}</div>` : ''}
 
+    <details class="capsule">
+      <summary>${esc(U.capsule)}</summary>
+      <div class="hint" style="margin:8px 0 10px">${esc(U.capsuleBody)}</div>
+      <div class="pill-row" id="caps">
+        ${capsuleOptions().map((o) =>
+          `<button class="pill" data-cap="${o.date.toISOString()}">${esc(U.capsuleOptions[o.key])}</button>`).join('')}
+        <button class="pill" data-cap="">${esc(U.capsuleNone)}</button>
+      </div>
+      <input class="field" id="capdate" type="date" style="margin-bottom:0">
+    </details>
+
     <div class="rail-label" style="margin:6px 0 10px">${esc(U.mood)}</div>
     <div class="moodrow">${[1, 2, 3, 4, 5].map((n) =>
       `<div class="moodbtn" data-mood="${n}"><span class="face">${FACES[n]}</span><span class="lb">${esc(U.moods[n])}</span></div>`).join('')}</div>
@@ -1473,6 +1580,18 @@ function captureFor(kind) {
   if (kind === 'photo') wirePhoto(sheet);
   if (kind === 'place') wireGeo(sheet, val);
   if (kind === 'voice') wireVoice(sheet, val);
+
+  sheet.querySelectorAll('[data-cap]').forEach((b) => b.onclick = () => {
+    pendingUnlock = b.dataset.cap || null;
+    sheet.querySelectorAll('[data-cap]').forEach((x) => x.classList.toggle('on', x === b && !!pendingUnlock));
+    const d = sheet.querySelector('#capdate');
+    if (d) d.value = pendingUnlock ? pendingUnlock.slice(0, 10) : '';
+    tap();
+  });
+  sheet.querySelector('#capdate')?.addEventListener('change', (e) => {
+    pendingUnlock = e.target.value ? new Date(e.target.value + 'T09:00:00').toISOString() : null;
+    sheet.querySelectorAll('[data-cap]').forEach((x) => x.classList.remove('on'));
+  });
 
   sheet.querySelectorAll('.moodbtn').forEach((b) => {
     b.onclick = () => {
@@ -1528,7 +1647,7 @@ function snap(sheet) {
   }
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   c.getContext('2d').drawImage(video, 0, 0, w, h);
-  pendingPhoto = c.toDataURL('image/jpeg', tier.quality);
+  pendingPhoto = sizes.encodeCanvas(c, state.settings.photoQuality || sizes.DEFAULT_PHOTO_QUALITY);
   stopCamera();
   sheet.querySelector('#camwrap').style.display = 'none';
   showPreview(sheet);
@@ -1668,17 +1787,21 @@ async function saveMoment(kind, text) {
     moment.audio = pendingAudio.dataUrl;
     moment.audioSeconds = pendingAudio.seconds;
   }
+  if (pendingUnlock) moment.unlockAt = pendingUnlock;
   moment.editedAt = new Date().toISOString();
-  await store.putMoment(moment);
-  pendingPhoto = null; pendingMood = null; pendingAudio = null;
+  await withLock(LOCK_WRITE, () => store.putMoment(moment));
+  const sealedUntil = pendingUnlock;
+  pendingPhoto = null; pendingMood = null; pendingAudio = null; pendingUnlock = null;
   await refresh();
   state.tab = 'today'; renderTabs(); render();
   closeSheet();
   tap(14);
-  toast(U.toasts.kept);
+  toast(sealedUntil
+    ? fill(U.capsuleSealed, { d: new Date(sealedUntil).toLocaleDateString(state.L.code) })
+    : U.toasts.kept);
 
   publishWidgetSnapshot();
-  if (state.pass) backup.syncNow(state.pass).catch(() => {});
+  if (state.pass) withLock(LOCK_SYNC, () => backup.syncNow(state.pass)).catch(() => {});
 }
 
 const SUBJECT_WORDS = {
@@ -1696,6 +1819,36 @@ function detectSubject(text) {
   for (const [subject, words] of Object.entries(SUBJECT_WORDS))
     if (words.some((w) => t.includes(w))) return subject;
   return null;
+}
+
+/* ================================================================== */
+/* time capsules                                                       */
+/* ================================================================== */
+async function renderCapsules(host) {
+  if (!host) return;
+  const U = state.L.ui;
+  const all = state.all || [];
+
+  // anything that came due since the last visit deserves announcing
+  const lastSeen = await store.getMeta('lastSeenAt', null);
+  const opened = newlyOpened(all, lastSeen);
+  await store.setMeta('lastSeenAt', new Date().toISOString());
+
+  const waiting = lockedMoments(all);
+  const next = nextCapsule(all);
+
+  host.innerHTML = [
+    ...opened.map((m) => `<div class="birthday">
+      <span class="bk">✦ ${esc(U.capsuleOpened)}</span>
+      <h3>${esc(m.title)}</h3>
+      <p>${esc(m.placard)}</p>
+    </div>`),
+    waiting.length ? `<div class="holidaybox" style="border-left-color:var(--slate)">
+      <span class="hk" style="color:var(--slate)">${esc(U.capsuleTitle)}</span>
+      <h4>${esc(plural(waiting.length, U.capsuleWaiting))}</h4>
+      ${next ? `<p>${esc(fill(U.capsuleNext, { d: next.daysAway }))}</p>` : ''}
+    </div>` : '',
+  ].join('');
 }
 
 /* ================================================================== */
@@ -1860,9 +2013,88 @@ async function publishWidgetSnapshot() {
 }
 window.curioWidgetSnapshot = publishWidgetSnapshot;   // the shells can also pull it
 
+/* ================================================================== */
+/* keeping the app up to date                                          */
+/* ================================================================== */
+/**
+ * The old registration installed a worker and then never looked again, so a
+ * published change could sit unseen for days. This watches for a new one,
+ * says so plainly, and lets the person take it when they are ready.
+ */
+let swRegistration = null;
+
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+
+  addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+      swRegistration = reg;
+
+      if (reg.waiting && navigator.serviceWorker.controller) showUpdateBar(reg.waiting);
+
+      reg.addEventListener('updatefound', () => {
+        const incoming = reg.installing;
+        if (!incoming) return;
+        incoming.addEventListener('statechange', () => {
+          // "installed" with an existing controller means: a newer version is ready
+          if (incoming.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBar(incoming);
+          }
+        });
+      });
+
+      // look again when the app comes back to the foreground
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) reg.update().catch(() => {});
+      });
+      setTimeout(() => reg.update().catch(() => {}), 3000);
+    } catch { /* no service worker is not fatal; the app still runs */ }
+  });
+
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  });
+}
+
+function showUpdateBar(worker) {
+  const U = state.L?.ui || {};
+  if ($('updatebar')) return;
+  const bar = el(`<div class="updatebar" id="updatebar">
+    <div class="ub-tx"><b>${esc(U.updateReady || 'A new version is ready')}</b>
+      <span>${esc(U.updateBody || '')}</span></div>
+    <button class="ub-go" id="ubgo">${esc(U.updateNow || 'Reload')}</button>
+  </div>`);
+  document.body.appendChild(bar);
+  bar.querySelector('#ubgo').onclick = () => {
+    bar.remove();
+    worker.postMessage({ type: 'skipWaiting' });
+    setTimeout(() => location.reload(), 400);
+  };
+}
+
+/** Ask the server outright, for when someone has just published a change. */
+async function checkForUpdates() {
+  const U = state.L.ui;
+  if (!swRegistration) { location.reload(); return; }
+  toast(U.checking);
+  try {
+    await swRegistration.update();
+    if (swRegistration.waiting || swRegistration.installing) {
+      toast(U.updateFound);
+      setTimeout(() => {
+        (swRegistration.waiting || swRegistration.installing)?.postMessage({ type: 'skipWaiting' });
+        setTimeout(() => location.reload(), 400);
+      }, 700);
+    } else {
+      toast(U.upToDate);
+    }
+  } catch {
+    location.reload();
+  }
 }
 
 boot();

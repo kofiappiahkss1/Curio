@@ -227,3 +227,65 @@ export async function dropOldAudio(moments, put, { days = 180, onProgress } = {}
   }
   return { saved, processed: targets.length };
 }
+
+/* ------------------------------------------------------------------ *
+ * WebP — smaller pictures from the moment they are taken
+ * ------------------------------------------------------------------ *
+ * The reclaim tools fix an archive that has already grown. Encoding to WebP on
+ * capture stops it growing in the first place: the same picture, roughly a
+ * third smaller, with no visible difference at these sizes. Not every browser
+ * can encode it, so this is asked rather than assumed, and JPEG remains the
+ * fallback everywhere.
+ * ------------------------------------------------------------------ */
+
+let _webpSupport = null;
+
+/** Can this browser actually *encode* WebP? Decoding is far more common. */
+export function canEncodeWebP() {
+  if (_webpSupport !== null) return _webpSupport;
+  try {
+    if (typeof document === 'undefined') { _webpSupport = false; return false; }
+    const c = document.createElement('canvas');
+    c.width = 2; c.height = 2;
+    _webpSupport = c.toDataURL('image/webp').startsWith('data:image/webp');
+  } catch { _webpSupport = false; }
+  return _webpSupport;
+}
+
+/** Reset the cached answer — only the tests need this. */
+export function _resetWebPCache() { _webpSupport = null; }
+
+/** The best format this browser can write, and the quality to write it at. */
+export function bestImageFormat(tier = DEFAULT_PHOTO_QUALITY) {
+  const cfg = PHOTO_QUALITY[tier] || PHOTO_QUALITY.balanced;
+  return canEncodeWebP()
+    // WebP holds up at a lower number than JPEG does
+    ? { mime: 'image/webp', quality: Math.max(0.6, cfg.quality - 0.1), maxDim: cfg.maxDim }
+    : { mime: 'image/jpeg', quality: cfg.quality, maxDim: cfg.maxDim };
+}
+
+/**
+ * Encode a canvas, preferring WebP but never returning something larger than
+ * the JPEG would have been.
+ */
+export function encodeCanvas(canvas, tier = DEFAULT_PHOTO_QUALITY) {
+  const fmt = bestImageFormat(tier);
+  const cfg = PHOTO_QUALITY[tier] || PHOTO_QUALITY.balanced;
+  const jpeg = canvas.toDataURL('image/jpeg', cfg.quality);
+  if (fmt.mime !== 'image/webp') return jpeg;
+  try {
+    const webp = canvas.toDataURL('image/webp', fmt.quality);
+    if (!webp.startsWith('data:image/webp')) return jpeg;
+    return dataUrlBytes(webp) < dataUrlBytes(jpeg) ? webp : jpeg;
+  } catch {
+    return jpeg;
+  }
+}
+
+/** What an archive would save by moving its JPEGs to WebP. */
+export function webpOpportunity(moments = []) {
+  if (!canEncodeWebP()) return { possible: false, count: 0, saves: 0 };
+  const jpegs = moments.filter((m) => m.photo && !String(m.photo).startsWith('data:image/webp'));
+  const bytes = jpegs.reduce((a, m) => a + dataUrlBytes(m.photo), 0);
+  return { possible: jpegs.length > 0, count: jpegs.length, saves: Math.round(bytes * 0.3) };
+}

@@ -451,3 +451,70 @@ export function stats(moments) {
     mood: moodAverage(kept),
   };
 }
+
+/* ================================================================== *
+ * TIME CAPSULES — moments sealed until a date you choose
+ * ================================================================== *
+ * A letter to yourself on a birthday, a note about a year you are in the
+ * middle of, a photo you would rather meet again than look at now.
+ *
+ * BE CLEAR ABOUT WHAT THIS IS. The archive is on your own device and you hold
+ * every key to it, so a capsule is not protection from an attacker — it is a
+ * promise you make to yourself, and Curio keeps it: sealed moments do not
+ * appear in the day, the archive, search, patterns or share cards until the
+ * date arrives. They are still yours the whole time, and an export always
+ * contains them.
+ * ================================================================== */
+
+export function isCapsule(m) {
+  return !!m?.unlockAt;
+}
+
+/** Still waiting? (Distinct from the vault's sealed *subjects*.) */
+export function isLocked(m, now = new Date()) {
+  if (!m?.unlockAt) return false;
+  return new Date(m.unlockAt).getTime() > now.getTime();
+}
+
+/** The moments a person should actually see right now. */
+export function visibleMoments(moments = [], now = new Date()) {
+  return moments.filter((m) => !isLocked(m, now));
+}
+
+/** The ones still waiting, soonest first. */
+export function lockedMoments(moments = [], now = new Date()) {
+  return moments
+    .filter((m) => isLocked(m, now))
+    .sort((a, b) => new Date(a.unlockAt) - new Date(b.unlockAt));
+}
+
+/** Anything that has just come due since the person last looked. */
+export function newlyOpened(moments = [], since, now = new Date()) {
+  if (!since) return [];
+  const from = new Date(since).getTime();
+  return moments.filter((m) => {
+    if (!m.unlockAt) return false;
+    const at = new Date(m.unlockAt).getTime();
+    return at > from && at <= now.getTime();
+  });
+}
+
+/** How long until the next one opens. */
+export function nextCapsule(moments = [], now = new Date()) {
+  const waiting = lockedMoments(moments, now);
+  if (!waiting.length) return null;
+  const m = waiting[0];
+  const days = Math.ceil((new Date(m.unlockAt) - now) / 86400000);
+  return { moment: m, daysAway: days, at: new Date(m.unlockAt) };
+}
+
+/** Handy offsets for the sealing dialog. */
+export function capsuleOptions(from = new Date()) {
+  const at = (fn) => { const d = new Date(from); fn(d); d.setHours(9, 0, 0, 0); return d; };
+  return [
+    { key: 'month6', date: at((d) => d.setMonth(d.getMonth() + 6)) },
+    { key: 'year1', date: at((d) => d.setFullYear(d.getFullYear() + 1)) },
+    { key: 'year5', date: at((d) => d.setFullYear(d.getFullYear() + 5)) },
+    { key: 'year10', date: at((d) => d.setFullYear(d.getFullYear() + 10)) },
+  ];
+}
