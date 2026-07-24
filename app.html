@@ -835,6 +835,49 @@ details.capsule[open]{border-color:color-mix(in srgb,var(--slate) 45%,transparen
 .linkrow .chev{color:var(--brass);font-size:14px;flex-shrink:0}
 html.is-hover .linkrow:hover .lr b{color:var(--brass)}
 
+
+/* ================= NUTRITION ================= */
+.foodhits{display:flex;flex-direction:column;gap:5px;margin:-6px 0 10px}
+.foodhit{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--surface-3);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;cursor:pointer;color:var(--ivory);font-family:var(--serif);
+  font-size:14.5px;text-align:start}
+.foodhit i{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.06em;
+  color:rgba(242,235,219,.4);flex-shrink:0}
+html.is-hover .foodhit:hover{border-color:color-mix(in srgb,var(--brass) 45%,transparent)}
+
+.foodlist{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.fooditem{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.fi-top{display:flex;align-items:center;gap:10px}
+.fi-name{flex:1;font-size:14.5px;min-width:0}
+.fi-kcal{font-family:var(--mono);font-size:11px;color:var(--brass);flex-shrink:0}
+.fi-x{background:none;border:none;color:rgba(242,235,219,.45);font-size:19px;line-height:1;
+  cursor:pointer;padding:0 2px;flex-shrink:0}
+.fi-portions{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.fi-p{background:var(--surface-3);border:1px solid var(--line);color:rgba(242,235,219,.7);
+  border-radius:14px;padding:5px 10px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.fi-p.on{background:var(--brass);border-color:var(--brass);color:#231d10;font-weight:700}
+.fi-g{font-family:var(--mono);font-size:9px;color:rgba(242,235,219,.35);margin-inline-start:auto}
+
+.foodtotal .ft{background:rgba(201,162,75,.09);border:1px solid rgba(201,162,75,.28);
+  border-radius:11px;padding:12px 13px;margin-bottom:12px}
+.ft b{display:block;font-family:var(--serif);font-size:17px;font-weight:500;color:var(--brass)}
+.ft span{display:block;font-size:13px;color:rgba(242,235,219,.7);margin-top:3px}
+.ft i{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(242,235,219,.35);margin-top:7px;font-style:normal}
+
+.nutbar{display:flex;align-items:baseline;gap:9px;margin-top:10px;padding-top:9px;
+  border-top:1px solid var(--card-line);flex-wrap:wrap}
+.nutbar b{font-family:var(--mono);font-size:12px;color:var(--brass-deep)}
+.nutbar span{font-size:12px;color:var(--card-fg-soft)}
+
+.dayenergy{background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--brass);
+  border-radius:13px;padding:12px 15px;margin-bottom:16px}
+[dir=rtl] .dayenergy{border-left:1px solid var(--line);border-right:3px solid var(--brass)}
+.dayenergy b{display:block;font-family:var(--serif);font-size:16px;font-weight:500}
+.dayenergy span{display:block;font-size:12.5px;color:rgba(242,235,219,.55);margin-top:3px}
+
 /* ---------- RTL adjustments ---------- */
 [dir=rtl] .tl{padding-left:0;padding-right:26px}
 [dir=rtl] .tl::before{left:auto;right:6px}

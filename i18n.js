@@ -150,6 +150,34 @@ const EN_GB = {
     upToDate: 'You are on the latest version.',
     updateFound: 'A new version was found. Reloading\u2026',
 
+    // ---- bringing a diary with you ----
+    migrate: 'Bring a diary with you',
+    migrateBody: 'Been keeping a diary somewhere else? Drop the export in and Curio will read it here on the device \u2014 nothing is uploaded, and no account is involved.',
+    migrateBtn: 'Choose an export file',
+    migrateFormats: 'Day One (.zip or .json) · Journey · plain JSON · CSV',
+    migrateFound: 'Found {n} entries from {span}.',
+    migrateFoundPhotos: '{n} entries, {p} with photographs, from {span}.',
+    migrateImport: 'Bring them in', migrateCancel: 'Not now',
+    migrateDone: '{n} entries brought in.',
+    migrateNone: 'Nothing readable in that file.',
+    migrateUnknown: 'Curio does not recognise that export. Day One, Journey, JSON and CSV all work.',
+    migrateBig: 'A large export can take a moment. Keep the app open.',
+    migrateWorking: 'Reading\u2026 {n} so far',
+    migrateKeeps: 'Imported entries are marked as imported, so your archive stays honest about where each memory came from.',
+
+    // ---- nutrition ----
+    nutrition: 'What was in it',
+    nutritionBody: 'Curio cannot read your photograph \u2014 that would mean sending it to a server, and it has none. Tell it what the meal was and it works the rest out here on the phone.',
+    addFood: 'Add a food', foodSearch: 'Search foods\u2026', foodNone: 'Nothing found. Try a simpler word.',
+    portionSmall: 'Small', portionMedium: 'Medium', portionLarge: 'Large',
+    grams: 'grams', removeFood: 'Remove',
+    kcal: 'kcal', protein: 'Protein', carbs: 'Carbs', fat: 'Fat', fibre: 'Fibre',
+    mealTotal: 'About {n} kcal', mealDetail: '{p}g protein · {c}g carbs · {f}g fat',
+    dayEnergy: 'Today: about {n} kcal', dayMeals: 'across {n} meals',
+    nutritionEstimate: 'These are estimates. Recipes vary by cook and by hand.',
+    nutritionOn: 'Track what you eat', nutritionOnBody: 'Adds calories and nutrients to meals.',
+    commonFoods: 'What you eat most',
+
     // ---- search ----
     searchSuggest: 'Try', searchNone: 'Nothing matches that.',
     searchHint: 'Partial words and small typos are fine.',

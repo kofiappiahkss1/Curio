@@ -19,12 +19,14 @@ import * as holidays from './holidays.js';
 import * as device from './device.js';
 import { MeetingSession, writeUp, placardFor, fmtClock, digest } from './meeting.js';
 import * as themes from './themes.js';
+import * as nutrition from './nutrition.js';
+import * as importer from './import.js';
 import { SearchIndex, highlight } from './search.js';
 import * as book from './book.js';
 import { withLock, LOCK_SYNC, LOCK_WRITE } from './locks.js';
 
 /** Bumped with every release, and shown in the Vault so a stale cache is obvious. */
-export const BUILD = '2026.07.23-14';
+export const BUILD = '2026.07.23-16';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -62,6 +64,7 @@ const state = { profile: { ...profile.EMPTY_PROFILE }, device: null, tab: 'today
                 locale: 'en-GB', L: null, settings: {}, pass: null, kit: null };
 let camStream = null, pendingPhoto = null, pendingMood = null, facing = 'environment';
 let recorder = null, pendingAudio = null, dictation = null, pendingUnlock = null;
+let pendingFoods = [];
 let meeting = null;
 let reminderTimer = null;
 
@@ -340,6 +343,12 @@ function showOnboarding() {
     <button class="wide-btn" id="restore">${esc(U.restoreBtn)}</button>
     <input type="file" id="kitfile" accept=".curiokit,application/json,.json" hidden>
 
+    <div class="rail-label" style="margin-top:24px">${esc(U.migrate)}</div>
+    <div class="discard-note">${esc(U.migrateBody)}</div>
+    <button class="wide-btn" id="migrate">${esc(U.migrateBtn)}</button>
+    <div class="hint" style="margin:-4px 0 8px">${esc(U.migrateFormats)}</div>
+    <input type="file" id="migratefile" accept=".zip,.json,.csv,application/json,text/csv" hidden>
+
     <div class="rail-label" style="margin-top:24px">${esc(U.sync)}</div>
     <div class="discard-note">${esc(U.syncBody)}</div>
     <div class="kitinfo" id="syncstate">…</div>
@@ -467,6 +476,10 @@ function cardHTML(m) {
     <div class="placard">${esc(m.placard)}</div>
     ${m.photo ? `<img class="thumb" src="${m.photo}" alt="">` : ''}
     ${m.audio ? `<audio class="cardaudio" controls preload="none" src="${m.audio}"></audio>` : ''}
+    ${m.nutrition ? `<div class="nutbar">
+      <b>${esc(fill(L.ui.mealTotal, { n: m.nutrition.total.kcal }))}</b>
+      <span>${esc(fill(L.ui.mealDetail, { p: m.nutrition.total.protein,
+        c: m.nutrition.total.carbs, f: m.nutrition.total.fat }))}</span></div>` : ''}
     <div class="tags"><span class="tag ${m.kind}">${esc(L.ui.kinds[m.kind]?.label || m.kind)}</span></div>
     <div class="expand"><div class="expand-inner">
       ${m.meeting ? `<div class="meetsum">${meetingSummaryHTML(m.meeting)}</div>` : ''}
@@ -578,6 +591,15 @@ function viewToday() {
       <span class="hk" style="color:var(--rose)">${esc(U.birthdays)}</span>
       <h4>${esc(fill(U.birthdaySoon, { name: bdaysSoon[0].name, n: bdaysSoon[0].turning, d: bdaysSoon[0].daysAway }))}</h4>
     </div>` : ''}
+
+    ${(() => {
+      const nt = nutrition.dayTotals(state.moments, today);
+      return nt.meals ? `<div class="dayenergy">
+        <b>${esc(fill(U.dayEnergy, { n: nt.kcal }))}</b>
+        <span>${esc(fill(U.dayMeals, { n: nt.meals }))} · ${esc(fill(U.mealDetail,
+          { p: nt.protein, c: nt.carbs, f: nt.fat }))}</span>
+      </div>` : '';
+    })()}
 
     <div class="streakbar">
       <span class="flame">${sk.current > 0 ? '🔥' : '🕯️'}</span>
@@ -831,6 +853,12 @@ function viewVault() {
     <button class="wide-btn" id="restore">${esc(U.restoreBtn)}</button>
     <input type="file" id="kitfile" accept=".curiokit,application/json,.json" hidden>
 
+    <div class="rail-label" style="margin-top:24px">${esc(U.migrate)}</div>
+    <div class="discard-note">${esc(U.migrateBody)}</div>
+    <button class="wide-btn" id="migrate">${esc(U.migrateBtn)}</button>
+    <div class="hint" style="margin:-4px 0 8px">${esc(U.migrateFormats)}</div>
+    <input type="file" id="migratefile" accept=".zip,.json,.csv,application/json,text/csv" hidden>
+
     <div class="rail-label" style="margin-top:24px">${esc(U.sync)}</div>
     <div class="discard-note">${esc(U.syncBody)}</div>
     <div class="kitinfo" id="syncstate">…</div>
@@ -1052,6 +1080,11 @@ function wireVault(v) {
   const kf = v.querySelector('#kitfile');
   v.querySelector('#restore').onclick = () => kf.click();
   kf.onchange = (e) => handleKitFile(e.target.files[0]);
+
+  // ---- bringing a diary with you ----
+  const mf = v.querySelector('#migratefile');
+  v.querySelector('#migrate').onclick = () => mf.click();
+  mf.onchange = (e) => handleMigration(e.target.files[0]);
 
   // ---- sync ----
   backup.syncEnabled().then(async (on) => {
@@ -1374,6 +1407,53 @@ async function offerMeetingRecovery() {
   };
 }
 
+/* ================================================================== */
+/* bringing a diary in from somewhere else                             */
+/* ================================================================== */
+async function handleMigration(file) {
+  if (!file) return;
+  const U = state.L.ui;
+  toast(U.migrateBig);
+  let res;
+  try {
+    res = await importer.readExport(file);
+  } catch (e) {
+    return toast(e.message === 'UNKNOWN_FORMAT' ? U.migrateUnknown : U.migrateNone, true);
+  }
+  if (!res.moments.length) return toast(U.migrateNone, true);
+
+  openSheet(`
+    <h3>${esc(U.migrate)}</h3>
+    <div class="kitinfo"><b>${esc(res.photos
+      ? fill(U.migrateFoundPhotos, { n: res.moments.length, p: res.photos, span: res.span })
+      : fill(U.migrateFound, { n: res.moments.length, span: res.span }))}</b></div>
+    <div class="hint" style="margin-bottom:12px">${esc(U.migrateKeeps)}</div>
+    <div class="sheet-actions">
+      <button id="cancel">${esc(U.migrateCancel)}</button>
+      <button class="primary" id="go">${esc(U.migrateImport)}</button>
+    </div>`);
+
+  const sh = $('sheet');
+  sh.querySelector('#cancel').onclick = closeSheet;
+  sh.querySelector('#go').onclick = async () => {
+    const btn = sh.querySelector('#go');
+    btn.disabled = true;
+    let n = 0;
+    await withLock(LOCK_WRITE, async () => {
+      for (const entry of res.moments) {
+        await store.putMoment(importer.toMoment(entry, n));
+        n++;
+        if (n % 25 === 0) btn.textContent = fill(U.migrateWorking, { n });
+      }
+    });
+    await refresh();
+    closeSheet();
+    state.tab = 'archive'; renderTabs(); render();
+    toast(fill(U.migrateDone, { n }));
+    if (state.pass) withLock(LOCK_SYNC, () => backup.syncNow(state.pass)).catch(() => {});
+  };
+}
+
 /* ---- storage panel ---- */
 async function renderStoragePanel(host) {
   if (!host) return;
@@ -1552,6 +1632,13 @@ function captureFor(kind) {
       ? `<textarea class="field" id="val" placeholder="${esc(K.ph)}"></textarea>`
       : `<input class="field" id="val" placeholder="${esc(K.ph)}">`}
     ${kind === 'place' ? `<button class="wide-btn" id="geo">${esc(U.useLocation)}</button>` : ''}
+    ${kind === 'meal' && state.settings.nutrition !== false ? `
+      <div class="rail-label" style="margin:6px 0 8px">${esc(U.nutrition)}</div>
+      <div class="hint" style="margin-bottom:10px">${esc(U.nutritionBody)}</div>
+      <input class="field" id="foodq" placeholder="${esc(U.foodSearch)}" autocomplete="off">
+      <div id="foodhits" class="foodhits"></div>
+      <div id="foodlist" class="foodlist"></div>
+      <div id="foodtotal" class="foodtotal"></div>` : ''}
     ${kind === 'voice' ? `
       <div class="recorder" id="recbox">
         <button class="recbtn" id="recbtn" aria-label="${esc(U.record)}"><span class="dot"></span></button>
@@ -1588,6 +1675,7 @@ function captureFor(kind) {
   if (kind === 'photo') wirePhoto(sheet);
   if (kind === 'place') wireGeo(sheet, val);
   if (kind === 'voice') wireVoice(sheet, val);
+  if (kind === 'meal') wireFoods(sheet);
 
   sheet.querySelectorAll('[data-cap]').forEach((b) => b.onclick = () => {
     pendingUnlock = b.dataset.cap || null;
@@ -1681,6 +1769,76 @@ function wireGeo(sheet, val) {
       () => toast(U.toasts.locationDenied, true),
       { timeout: 8000, enableHighAccuracy: false });
   };
+}
+
+/* ---- what was in the meal ---- */
+function wireFoods(sheet) {
+  const U = state.L.ui;
+  pendingFoods = [];
+  const q = sheet.querySelector('#foodq');
+  if (!q) return;
+  const hits = sheet.querySelector('#foodhits');
+
+  q.oninput = () => {
+    const found = nutrition.findFoods(q.value, 6);
+    hits.innerHTML = q.value.trim().length < 2 ? ''
+      : found.length
+        ? found.map((f) => `<button class="foodhit" data-food="${f.id}">${esc(f.name)}
+            <i>${f.kcal} ${esc(U.kcal)}/100g</i></button>`).join('')
+        : `<div class="hint" style="padding:6px 2px">${esc(U.foodNone)}</div>`;
+    hits.querySelectorAll('[data-food]').forEach((b) => b.onclick = () => {
+      const food = nutrition.foodById(b.dataset.food);
+      if (!food) return;
+      pendingFoods.push({ food, portion: nutrition.DEFAULT_PORTION,
+                          grams: nutrition.defaultGrams(food, nutrition.DEFAULT_PORTION) });
+      q.value = ''; hits.innerHTML = '';
+      tap(); paintFoods(sheet);
+    });
+  };
+  paintFoods(sheet);
+}
+
+function paintFoods(sheet) {
+  const U = state.L.ui;
+  const list = sheet.querySelector('#foodlist');
+  const totalHost = sheet.querySelector('#foodtotal');
+  if (!list) return;
+
+  list.innerHTML = pendingFoods.map((row, i) => {
+    const s = nutrition.forServing(row.food, row.grams);
+    return `<div class="fooditem">
+      <div class="fi-top">
+        <span class="fi-name">${esc(row.food.name)}</span>
+        <span class="fi-kcal">${s.kcal} ${esc(U.kcal)}</span>
+        <button class="fi-x" data-rm="${i}" aria-label="${esc(U.removeFood)}">×</button>
+      </div>
+      <div class="fi-portions">
+        ${nutrition.PORTIONS.map((p) => `<button class="fi-p ${row.portion === p.key ? 'on' : ''}"
+          data-p="${i}:${p.key}">${esc(U['portion' + p.key[0].toUpperCase() + p.key.slice(1)])}</button>`).join('')}
+        <span class="fi-g">${row.grams} ${esc(U.grams)}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => {
+    pendingFoods.splice(Number(b.dataset.rm), 1); paintFoods(sheet);
+  });
+  list.querySelectorAll('[data-p]').forEach((b) => b.onclick = () => {
+    const [i, key] = b.dataset.p.split(':');
+    const row = pendingFoods[Number(i)];
+    row.portion = key;
+    row.grams = nutrition.defaultGrams(row.food, key);
+    tap(); paintFoods(sheet);
+  });
+
+  if (totalHost) {
+    if (!pendingFoods.length) { totalHost.innerHTML = ''; return; }
+    const t = nutrition.total(pendingFoods.map((r) => nutrition.forServing(r.food, r.grams)));
+    totalHost.innerHTML = `<div class="ft">
+      <b>${esc(fill(U.mealTotal, { n: t.kcal }))}</b>
+      <span>${esc(fill(U.mealDetail, { p: t.protein, c: t.carbs, f: t.fat }))}</span>
+      <i>${esc(U.nutritionEstimate)}</i></div>`;
+  }
 }
 
 /* ---- voice ---- */
@@ -1795,11 +1953,18 @@ async function saveMoment(kind, text) {
     moment.audio = pendingAudio.dataUrl;
     moment.audioSeconds = pendingAudio.seconds;
   }
+  if (pendingFoods.length) {
+    const items = pendingFoods.map((r) => ({
+      name: r.food.name, grams: r.grams, portion: r.portion,
+      ...nutrition.forServing(r.food, r.grams),
+    }));
+    moment.nutrition = { items, total: nutrition.total(items) };
+  }
   if (pendingUnlock) moment.unlockAt = pendingUnlock;
   moment.editedAt = new Date().toISOString();
   await withLock(LOCK_WRITE, () => store.putMoment(moment));
   const sealedUntil = pendingUnlock;
-  pendingPhoto = null; pendingMood = null; pendingAudio = null; pendingUnlock = null;
+  pendingPhoto = null; pendingMood = null; pendingAudio = null; pendingUnlock = null; pendingFoods = [];
   await refresh();
   state.tab = 'today'; renderTabs(); render();
   closeSheet();

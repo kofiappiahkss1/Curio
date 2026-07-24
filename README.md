@@ -85,6 +85,19 @@ go stale: fixed dates, "fourth Thursday of November", everything hung off Easter
 and the Islamic calendar through the browser's own support. Ghana, Nigeria,
 Kenya, South Africa and Tanzania are all in, alongside the usual suspects.
 
+**What you ate** — photograph the meal as always, then tell Curio what it was:
+133 foods with real energy and macros, weighted towards the food people
+actually eat (jollof, banku, waakye, ugali, injera, pilau) rather than only
+Western dishes. Portions in the shapes people think in. **Curio does not read
+your photograph** — that would mean sending it to a server, and it has none.
+
+**Bringing a diary with you** — drop in a Day One export (`.zip` or `.json`),
+Journey, plain JSON or CSV, and Curio reads it on the device: entries, dates,
+places, tags and photographs. It includes a small ZIP reader built on the
+browser's own decompression, so no library is needed. Imported entries are
+marked as imported, so the archive stays honest about where each memory came
+from.
+
 **Real search** — a proper inverted index, written from scratch rather than
 pulled in as a dependency. Ranked, so the best answer is first; prefix-matched,
 so results appear while you type; and forgiving of one typo, so *jollof rise*
@@ -196,6 +209,8 @@ themes.js    six palettes plus system preference
 search.js    inverted index: ranking, prefix, typo tolerance
 book.js      the year as a printable A5 volume
 locks.js     one writer at a time, across tabs
+nutrition.js 133 foods, portions and daily totals
+import.js    ZIP reader + Day One / Journey / JSON / CSV parsers
 history.js   the bundled almanac + widget snapshot
 backup.js    kits, auto-backup to a folder, restore & merge, exports
 share.js     renders placards to shareable images, on-device
