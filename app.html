@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#1d1a2b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Curio">
+<meta name="apple-mobile-web-app-title" content="The Curio">
 <meta name="description" content="A diary that writes itself — and answers only to you.">
-<title>Curio</title>
+<title>The Curio</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
@@ -334,7 +334,7 @@ select.field.select option{background:var(--dusk-2);color:var(--ivory)}
     flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;
     padding:30px 14px;border-top:none;border-right:1px solid var(--line);
     background:rgba(24,20,33,.6);max-width:none;margin:0;backdrop-filter:none}
-  .tabs::before{content:"Curio";font-family:var(--serif);font-size:26px;font-weight:500;
+  .tabs::before{content:"The Curio";font-family:var(--serif);font-size:26px;font-weight:500;
     color:var(--ivory);padding:0 12px 22px;letter-spacing:.01em}
   .tab{flex:0 0 auto;flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 12px;border-radius:10px}
   .tab:hover{background:rgba(242,235,219,.05)}
@@ -878,6 +878,18 @@ html.is-hover .foodhit:hover{border-color:color-mix(in srgb,var(--brass) 45%,tra
 .dayenergy b{display:block;font-family:var(--serif);font-size:16px;font-weight:500}
 .dayenergy span{display:block;font-size:12.5px;color:rgba(242,235,219,.55);margin-top:3px}
 
+
+/* ================= THE PROMPT ================= */
+.promptcard{background:linear-gradient(135deg,color-mix(in srgb,var(--brass) 14%,var(--surface-2)),var(--surface-2));
+  border:1px solid color-mix(in srgb,var(--brass) 32%,transparent);border-radius:15px;
+  padding:16px 17px;margin-bottom:18px;animation:dealIn .5s var(--ease-out) both}
+.promptcard p{font-family:var(--serif);font-size:17px;line-height:1.45;color:var(--ivory);margin-bottom:13px}
+.pc-actions{display:flex;gap:9px;justify-content:flex-end}
+.pc-skip,.pc-go{border-radius:20px;padding:8px 15px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.09em;text-transform:uppercase;cursor:pointer;border:1px solid var(--line)}
+.pc-skip{background:transparent;color:rgba(242,235,219,.5)}
+.pc-go{background:var(--brass);border-color:var(--brass);color:#231d10;font-weight:700}
+
 /* ---------- RTL adjustments ---------- */
 [dir=rtl] .tl{padding-left:0;padding-right:26px}
 [dir=rtl] .tl::before{left:auto;right:6px}
@@ -889,7 +901,7 @@ html.is-hover .foodhit:hover{border-color:color-mix(in srgb,var(--brass) 45%,tra
 <body>
   <div id="app">
     <div class="topbar">
-      <div class="wordmark"><span class="k" id="tagline">A diary that writes itself</span><span class="n">Curio</span></div>
+      <div class="wordmark"><span class="k" id="tagline">A diary that writes itself</span><span class="n">The Curio</span></div>
       <div class="seal-mini"><span class="seal-dot" id="dot"></span><span id="netlabel">Offline-ready</span></div>
     </div>
     <div class="body" id="body"></div>

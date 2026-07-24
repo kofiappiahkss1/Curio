@@ -125,7 +125,7 @@ export async function renderMoment(moment, { locale = 'en-GB', tag = 'Curio', rt
   ctx.textAlign = 'center';
   ctx.font = `500 40px ${SERIF}`;
   ctx.fillStyle = IVORY;
-  ctx.fillText('Curio', W / 2, H - 138);
+  ctx.fillText('The Curio', W / 2, H - 138);
   ctx.font = `600 19px ${MONO}`;
   ctx.fillStyle = BRASS;
   ctx.fillText('A DIARY THAT WRITES ITSELF', W / 2, H - 84);
@@ -210,7 +210,7 @@ export async function renderDay(day, moments, { locale = 'en-GB', rtl = false } 
   ctx.textAlign = 'center';
   ctx.font = `500 40px ${SERIF}`;
   ctx.fillStyle = IVORY;
-  ctx.fillText('Curio', W / 2, H - 128);
+  ctx.fillText('The Curio', W / 2, H - 128);
   ctx.font = `600 19px ${MONO}`;
   ctx.fillStyle = BRASS;
   ctx.fillText('A DIARY THAT WRITES ITSELF', W / 2, H - 74);

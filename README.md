@@ -1,4 +1,4 @@
-# Curio
+# The Curio
 
 **A diary that writes itself — and answers only to you.**
 
@@ -84,6 +84,18 @@ network call, and easily corrected.
 go stale: fixed dates, "fourth Thursday of November", everything hung off Easter,
 and the Islamic calendar through the browser's own support. Ghana, Nigeria,
 Kenya, South Africa and Tanzania are all in, alongside the usual suspects.
+
+**It says something when you open it** — a prompt built from what it already
+knows: the hour, whether you have kept anything, how long the streak has run,
+where you keep going back to, whose birthday it is. Once you have written a few
+things it goes quiet, because being nagged after you have done the thing is how
+an app starts to feel like a chore.
+
+**A calendar bridge, without an account** — reading Google Calendar directly
+needs OAuth and a server, and The Curio has neither. Every calendar speaks the
+same plain file, though: drop an `.ics` in and it reads your events on the
+device; write one out and your own calendar handles the reminding, alarms
+included. That is as close to an alarm clock as a web app can honestly get.
 
 **What you ate** — photograph the meal as always, then tell Curio what it was:
 133 foods with real energy and macros, weighted towards the food people
@@ -211,6 +223,8 @@ book.js      the year as a printable A5 volume
 locks.js     one writer at a time, across tabs
 nutrition.js 133 foods, portions and daily totals
 import.js    ZIP reader + Day One / Journey / JSON / CSV parsers
+calendar.js  reads and writes .ics, in both directions
+prompts.js   what to say when the app opens
 history.js   the bundled almanac + widget snapshot
 backup.js    kits, auto-backup to a folder, restore & merge, exports
 share.js     renders placards to shareable images, on-device

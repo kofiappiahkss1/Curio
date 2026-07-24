@@ -150,6 +150,25 @@ const EN_GB = {
     upToDate: 'You are on the latest version.',
     updateFound: 'A new version was found. Reloading\u2026',
 
+    // ---- the calendar bridge ----
+    calendar: 'Your calendar',
+    calendarBody: 'Reading Google Calendar directly needs an account and a server, and The Curio has neither. Every calendar speaks the same plain file, though \u2014 and that needs nobody\u2019s permission.',
+    calImport: 'Bring events in', calImportBtn: 'Choose a calendar file',
+    calImportHow: 'In Google Calendar: Settings \u2192 Import &amp; export \u2192 Export. Drop the .ics here.',
+    calFound: 'Found {n} events worth keeping, from {span}.',
+    calNone: 'Nothing in that file worth keeping \u2014 recurring meetings and blocked time are skipped.',
+    calBad: 'That does not look like a calendar file.',
+    calImported: '{n} events kept.',
+    calExport: 'Send dates to your calendar',
+    calExportBody: 'Writes your birthdays, sealed capsules and a daily nudge as a calendar file. Import it once and your own calendar does the reminding \u2014 alarms included, which no web app can do by itself.',
+    calExportBtn: 'Make a calendar file', calExported: '{n} dates written.',
+    calExportHow: 'In Google Calendar: Settings \u2192 Import &amp; export \u2192 Import, then choose the file.',
+    calAlarmNote: 'This is the honest version of an alarm: your phone\u2019s own calendar rings, and The Curio is what you open.',
+
+    // ---- what to say when you open it ----
+    promptSkip: 'Not today',
+    promptAct: 'Keep it',
+
     // ---- bringing a diary with you ----
     migrate: 'Bring a diary with you',
     migrateBody: 'Been keeping a diary somewhere else? Drop the export in and Curio will read it here on the device \u2014 nothing is uploaded, and no account is involved.',

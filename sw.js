@@ -22,7 +22,7 @@
  * HTTP cache and to the server, so a new version is genuinely new.
  */
 
-const VERSION = 'v16';
+const VERSION = 'v18';
 const CODE_CACHE = `curio-code-${VERSION}`;
 const ASSET_CACHE = `curio-assets-${VERSION}`;
 
@@ -32,7 +32,7 @@ const CODE = [
   './app.js', './core.js', './store.js', './i18n.js', './crypto.js', './backup.js',
   './share.js', './voice.js', './history.js', './storage.js', './profile.js',
   './holidays.js', './device.js', './meeting.js', './themes.js', './search.js',
-  './book.js', './locks.js', './nutrition.js', './import.js',
+  './book.js', './locks.js', './nutrition.js', './import.js', './calendar.js', './prompts.js', './licence.js', './business.js',
   './manifest.webmanifest',
 ];
 

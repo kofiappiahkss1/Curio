@@ -1,6 +1,6 @@
 {
-  "name": "Curio — a diary that writes itself",
-  "short_name": "Curio",
+  "name": "The Curio — a diary that writes itself",
+  "short_name": "The Curio",
   "description": "A private museum of your ordinary days. Works entirely offline, on your phone. 14 languages.",
   "start_url": "./app.html",
   "scope": "./",

@@ -45,9 +45,9 @@ export function organise(moments, year, { composeDay, locale = 'en-GB' } = {}) {
  */
 export function render(book, { locale = 'en-GB', name = '', stats = null, labels = {} } = {}) {
   const L = {
-    title: 'Curio', volume: 'Volume', of: 'The year of',
+    title: 'The Curio', volume: 'Volume', of: 'The year of',
     contents: 'Contents', kept: 'moments kept', days: 'days written',
-    photos: 'photographs', colophon: 'Made by Curio on this device. No copy of this was sent anywhere.',
+    photos: 'photographs', colophon: 'Made by The Curio on this device. No copy of this was sent anywhere.',
     empty: 'Nothing was kept this year.',
     ...labels,
   };

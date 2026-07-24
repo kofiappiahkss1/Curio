@@ -21,12 +21,14 @@ import { MeetingSession, writeUp, placardFor, fmtClock, digest } from './meeting
 import * as themes from './themes.js';
 import * as nutrition from './nutrition.js';
 import * as importer from './import.js';
+import * as ical from './calendar.js';
+import * as prompts from './prompts.js';
 import { SearchIndex, highlight } from './search.js';
 import * as book from './book.js';
 import { withLock, LOCK_SYNC, LOCK_WRITE } from './locks.js';
 
 /** Bumped with every release, and shown in the Vault so a stale cache is obvious. */
-export const BUILD = '2026.07.23-16';
+export const BUILD = '2026.07.24-18';
 
 const $ = (id) => document.getElementById(id);
 const el = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
@@ -105,6 +107,7 @@ function start() {
   runSyncOnOpen();
   publishWidgetSnapshot();
   offerMeetingRecovery();
+  noteOpening();
 }
 
 /** Pull anything a second device left in the shared folder. */
@@ -349,6 +352,15 @@ function showOnboarding() {
     <div class="hint" style="margin:-4px 0 8px">${esc(U.migrateFormats)}</div>
     <input type="file" id="migratefile" accept=".zip,.json,.csv,application/json,text/csv" hidden>
 
+    <div class="rail-label" style="margin-top:24px">${esc(U.calendar)}</div>
+    <div class="discard-note">${esc(U.calendarBody)}</div>
+    <button class="wide-btn" id="calin">${esc(U.calImportBtn)}</button>
+    <div class="hint" style="margin:-4px 0 12px">${esc(U.calImportHow)}</div>
+    <input type="file" id="calfile" accept=".ics,text/calendar" hidden>
+    <button class="wide-btn" id="calout">${esc(U.calExportBtn)}</button>
+    <div class="hint" style="margin:-4px 0 6px">${esc(U.calExportHow)}</div>
+    <div class="discard-note">${esc(U.calAlarmNote)}</div>
+
     <div class="rail-label" style="margin-top:24px">${esc(U.sync)}</div>
     <div class="discard-note">${esc(U.syncBody)}</div>
     <div class="kitinfo" id="syncstate">…</div>
@@ -555,6 +567,7 @@ function viewToday() {
 
   const v = el(`<div class="view">
     <div id="installbar"></div>
+    <div id="prompt"></div>
     <div id="banner"></div>
 
     ${profile.hasName(P) || dayCount ? `<div class="hello">
@@ -652,6 +665,7 @@ function viewToday() {
   renderBanner(v.querySelector('#banner'));
   renderWorldHistory(v.querySelector('#worldhistory'));
   renderCapsules(v.querySelector('#capsules'));
+  renderPrompt(v.querySelector('#prompt'));
   v.querySelector('#shareday')?.addEventListener('click', shareToday);
   maybeShowInstall();
   return v;
@@ -858,6 +872,15 @@ function viewVault() {
     <button class="wide-btn" id="migrate">${esc(U.migrateBtn)}</button>
     <div class="hint" style="margin:-4px 0 8px">${esc(U.migrateFormats)}</div>
     <input type="file" id="migratefile" accept=".zip,.json,.csv,application/json,text/csv" hidden>
+
+    <div class="rail-label" style="margin-top:24px">${esc(U.calendar)}</div>
+    <div class="discard-note">${esc(U.calendarBody)}</div>
+    <button class="wide-btn" id="calin">${esc(U.calImportBtn)}</button>
+    <div class="hint" style="margin:-4px 0 12px">${esc(U.calImportHow)}</div>
+    <input type="file" id="calfile" accept=".ics,text/calendar" hidden>
+    <button class="wide-btn" id="calout">${esc(U.calExportBtn)}</button>
+    <div class="hint" style="margin:-4px 0 6px">${esc(U.calExportHow)}</div>
+    <div class="discard-note">${esc(U.calAlarmNote)}</div>
 
     <div class="rail-label" style="margin-top:24px">${esc(U.sync)}</div>
     <div class="discard-note">${esc(U.syncBody)}</div>
@@ -1085,6 +1108,12 @@ function wireVault(v) {
   const mf = v.querySelector('#migratefile');
   v.querySelector('#migrate').onclick = () => mf.click();
   mf.onchange = (e) => handleMigration(e.target.files[0]);
+
+  // ---- the calendar bridge ----
+  const cf = v.querySelector('#calfile');
+  v.querySelector('#calin').onclick = () => cf.click();
+  cf.onchange = (e) => handleCalendarImport(e.target.files[0]);
+  v.querySelector('#calout').onclick = () => exportCalendar();
 
   // ---- sync ----
   backup.syncEnabled().then(async (on) => {
@@ -1405,6 +1434,73 @@ async function offerMeetingRecovery() {
     await saveMeetingMoment({ ...draft, digest: digest(draft.transcript || '') });
     closeSheet(); render(); toast(M.saved);
   };
+}
+
+/* ================================================================== */
+/* the calendar bridge                                                 */
+/* ================================================================== */
+async function handleCalendarImport(file) {
+  if (!file) return;
+  const U = state.L.ui;
+  let events;
+  try {
+    events = ical.parseIcs(await file.text());
+  } catch { return toast(U.calBad, true); }
+  if (!events.length) return toast(U.calBad, true);
+
+  const year = new Date(); year.setFullYear(year.getFullYear() - 2);
+  const worth = ical.worthKeeping(events, { from: year, to: new Date() });
+  if (!worth.length) return toast(U.calNone, true);
+
+  const years = [...new Set(worth.map((e) => e.start.getFullYear()))].sort();
+  const span = years.length > 1 ? `${years[0]}–${years[years.length - 1]}` : String(years[0]);
+
+  openSheet(`
+    <h3>${esc(U.calImport)}</h3>
+    <div class="kitinfo"><b>${esc(fill(U.calFound, { n: worth.length, span }))}</b></div>
+    <div class="hint" style="margin-bottom:12px">${esc(U.migrateKeeps)}</div>
+    <div class="sheet-actions">
+      <button id="cancel">${esc(U.migrateCancel)}</button>
+      <button class="primary" id="go">${esc(U.migrateImport)}</button>
+    </div>`);
+  const sh = $('sheet');
+  sh.querySelector('#cancel').onclick = closeSheet;
+  sh.querySelector('#go').onclick = async () => {
+    let n = 0;
+    await withLock(LOCK_WRITE, async () => {
+      for (const e of worth) { await store.putMoment(ical.toMoment(e, n)); n++; }
+    });
+    await refresh(); closeSheet();
+    state.tab = 'archive'; renderTabs(); render();
+    toast(fill(U.calImported, { n }));
+  };
+}
+
+function exportCalendar() {
+  const U = state.L.ui;
+  const P = state.profile;
+  const capsules = lockedMoments(state.all || []).map((m) => ({ title: m.title, unlockAt: m.unlockAt }));
+  const payload = {
+    people: P.people || [],
+    capsules,
+    ownBirthday: P.dob || null,
+    name: P.name || '',
+    reminder: state.settings.reminder
+      ? { hour: Number((state.settings.reminderAt || '21:00').split(':')[0]),
+          minute: Number((state.settings.reminderAt || '21:00').split(':')[1]),
+          text: U.reminderTitle }
+      : null,
+  };
+  const count = ical.countIcs(payload);
+  if (!count) return toast(U.calNone, true);
+
+  const blob = new Blob([ical.buildIcs(payload)], { type: 'text/calendar' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'the-curio.ics';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(fill(U.calExported, { n: count }));
 }
 
 /* ================================================================== */
@@ -1992,6 +2088,76 @@ function detectSubject(text) {
   for (const [subject, words] of Object.entries(SUBJECT_WORDS))
     if (words.some((w) => t.includes(w))) return subject;
   return null;
+}
+
+/* ================================================================== */
+/* what The Curio says when you open it                                */
+/* ================================================================== */
+async function renderPrompt(host) {
+  if (!host) return;
+  const U = state.L.ui;
+  const today = dayKey(new Date());
+  const kept = momentsFor(today).length;
+  const sk = streaks(state.moments);
+  const P = state.profile;
+
+  const seen = (await store.getMeta('promptsSeen', {})) || {};
+  const seenToday = seen.day === today ? (seen.keys || []) : [];
+
+  const places = state.moments.filter((m) => m.kind === 'place' && m.label);
+  const people = state.moments.filter((m) => m.kind === 'person' && m.label);
+  const meals = state.moments.filter((m) => m.kind === 'meal' && m.label);
+  const commonest = (list) => {
+    const c = new Map();
+    list.forEach((m) => c.set(m.label, (c.get(m.label) || 0) + 1));
+    const top = [...c.entries()].sort((a, b) => b[1] - a[1])[0];
+    return top && top[1] >= 3 ? top[0] : null;
+  };
+
+  const bday = profile.nextBirthday(P.dob);
+  const others = profile.birthdaysToday(P.people || []);
+  const hol = P.country && !state.settings.holidaysOff ? holidays.forDate(P.country)[0] : null;
+
+  const chosen = prompts.choose({
+    now: new Date(),
+    keptToday: kept,
+    streak: sk.current,
+    total: state.moments.length,
+    daysAway: prompts.daysSince(state.settings.lastOpenedAt),
+    topPlace: commonest(places),
+    topPerson: commonest(people),
+    topMeal: commonest(meals),
+    birthdayOwn: !!bday?.isToday,
+    birthdayName: others[0]?.name || null,
+    holiday: hol?.name || null,
+    seen: seenToday,
+  });
+
+  if (!chosen) { host.innerHTML = ''; return; }
+
+  host.innerHTML = `<div class="promptcard">
+    <p>${esc(prompts.fillPrompt(chosen.text, chosen.vars))}</p>
+    <div class="pc-actions">
+      <button class="pc-skip" id="pskip">${esc(U.promptSkip)}</button>
+      <button class="pc-go" id="pgo">${esc(U.promptAct)}</button>
+    </div>
+  </div>`;
+
+  const dismiss = async () => {
+    await store.setMeta('promptsSeen', { day: today, keys: [...seenToday, chosen.key] });
+    host.innerHTML = '';
+  };
+  host.querySelector('#pskip').onclick = dismiss;
+  host.querySelector('#pgo').onclick = async () => { await dismiss(); tap(); openCaptureSheet(); };
+}
+
+/** Note that the app was opened, so it can tell a new day from a second look. */
+async function noteOpening() {
+  const now = new Date();
+  const first = prompts.isFirstOpenToday(state.settings.lastOpenedAt, now);
+  const openings = [...(state.settings.openings || []), now.toISOString()].slice(-30);
+  await saveSettings({ lastOpenedAt: now.toISOString(), openings });
+  return first;
 }
 
 /* ================================================================== */
